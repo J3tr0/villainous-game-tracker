@@ -1,0 +1,28 @@
+import { Villain } from '@/utils/type';
+
+export const villains: Villain[] = [
+	{ id: 'malefica', name: 'Malefica' },
+	{ id: 'ursula', name: 'Ursula' },
+	{ id: 'uncino', name: 'Capitan Uncino' },
+	{ id: 'jafar', name: 'Jafar' },
+	{ id: 'giovanni', name: 'Principe Giovanni' },
+	{ id: 'cuori', name: 'Regina di Cuori' },
+	{ id: 'rattigan', name: 'Rattigan' },
+	{ id: 'scar', name: 'Scar' },
+	{ id: 'yzma', name: 'Yzma' },
+	{ id: 'matrigna', name: 'La matrigna' },
+	{ id: 'gaston', name: 'Gaston' },
+	{ id: 'cornelius', name: 'Re Cornelius' },
+	{ id: 'syndrome', name: 'Syndrome' },
+	{ id: 'lotso', name: 'Lotso' },
+	{ id: 'mago', name: 'Maga Magò' },
+	{ id: 'ade', name: 'Ade' },
+	{ id: 'facilier', name: 'Dr. Facilier' },
+	{ id: 'cattiva', name: 'Regina cattiva' },
+	{ id: 'gambadilegno', name: 'Gambadilegno' },
+	{ id: 'crudelia', name: 'Crudelia de Mon' },
+	{ id: 'gothel', name: 'Madre Gothel' },
+	{ id: 'candito', name: 'Re Candito' },
+	{ id: 'sherkhan', name: 'Sher Khan' },
+	{ id: 'baubau', name: 'Bau Bau' },
+];
