@@ -43,7 +43,11 @@ export function RecentGames() {
 
 	return (
 		<section className="mt-8">
-			<h2 className="text-2xl font-bold mb-4">Ultime partite inserite</h2>
+			<h2 className="text-2xl font-bold mb-4 uppercase">
+				<span className="bg-clip-text text-transparent bg-gradient-to-tl from-pink-500 to-indigo-800">
+					Ultime partite inserite
+				</span>
+			</h2>
 			<div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
 				{recentGames.map((game) => (
 					<GameCard

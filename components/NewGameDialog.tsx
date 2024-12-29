@@ -16,7 +16,8 @@ export function NewGameDialog() {
 			<DialogTrigger asChild>
 				<Button
 					variant="default"
-					size="icon">
+					size="icon"
+					className="bg-gradient-to-tl from-pink-500 to-indigo-800">
 					<Plus className="h-4 w-4" />
 					<span className="sr-only">Aggiungi partita</span>
 				</Button>
