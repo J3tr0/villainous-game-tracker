@@ -2,6 +2,8 @@ import { Avatar, AvatarImage } from '@/components/ui/avatar';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { villains } from '@/data/data';
 import { games } from '@/data/games';
+import { ArrowRight } from 'lucide-react';
+import Link from 'next/link';
 import {
 	Table,
 	TableBody,
@@ -120,6 +122,14 @@ export default function VillainsByPlayerCount() {
 					</TabsContent>
 				))}
 			</Tabs>
+			<div className="mt-4">
+				<Link
+					href="/stats/villains-by-player-count"
+					className="inline-flex items-center text-sm text-muted-foreground hover:text-primary transition-colors">
+					Vedi statistiche complete
+					<ArrowRight className="ml-2 h-4 w-4" />
+				</Link>
+			</div>
 		</section>
 	);
 }
