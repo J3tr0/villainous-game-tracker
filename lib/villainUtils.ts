@@ -166,3 +166,53 @@ export const formatDate = (date: Date): string => {
 		year: 'numeric',
 	});
 };
+
+/**
+ * Ottiene le statistiche complete di un villain
+ */
+export const getVillainStats = (villainId: string) => {
+	const stats = games.reduce(
+		(acc, game) => {
+			const villainGame = game.players.find((p) => p.villainId === villainId);
+			if (villainGame) {
+				acc.totalGames++;
+				if (villainGame.isWinner) acc.wins++;
+				if (game.date > acc.lastPlayed) acc.lastPlayed = game.date;
+			}
+			return acc;
+		},
+		{ totalGames: 0, wins: 0, lastPlayed: new Date(0) }
+	);
+
+	return {
+		...stats,
+		winRate: formatPercentage((stats.wins / stats.totalGames) * 100),
+	};
+};
+
+/**
+ * Ottiene le statistiche di un villain per numero di giocatori
+ */
+export const getVillainGamesByPlayerCount = (villainId: string) => {
+	const statsByPlayerCount = games.reduce((acc, game) => {
+		const villainGame = game.players.find((p) => p.villainId === villainId);
+		if (villainGame) {
+			if (!acc[game.numberOfPlayers]) {
+				acc[game.numberOfPlayers] = { total: 0, wins: 0 };
+			}
+			acc[game.numberOfPlayers].total++;
+			if (villainGame.isWinner) {
+				acc[game.numberOfPlayers].wins++;
+			}
+		}
+		return acc;
+	}, {} as Record<number, { total: number; wins: number }>);
+
+	return Object.entries(statsByPlayerCount)
+		.map(([playerCount, stats]) => ({
+			playerCount: Number(playerCount),
+			...stats,
+			winRate: formatPercentage((stats.wins / stats.total) * 100),
+		}))
+		.sort((a, b) => a.playerCount - b.playerCount);
+};

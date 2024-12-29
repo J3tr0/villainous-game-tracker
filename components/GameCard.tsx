@@ -3,6 +3,7 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { GameResult } from '@/lib/type';
 import { getVillainImage, getVillainName } from '@/lib/villainUtils';
+import Link from 'next/link';
 
 export function GameCard({ game }: { game: GameResult }) {
 	return (
@@ -26,22 +27,27 @@ export function GameCard({ game }: { game: GameResult }) {
 			<CardContent className="pb-6 px-0">
 				<div className="space-y-1">
 					{game.players.map((player, index) => (
-						<div
+						<Link
 							key={index}
-							className="flex justify-between items-center px-6 py-2 hover:bg-gradient-to-tl hover:from-pink-500/25 hover:to-indigo-800/25">
-							<span
-								className={`flex items-center gap-2 text-sm ${
-									player.isWinner ? 'font-medium' : 'font-light'
-								}`}>
-								<Avatar className="size-8 rounded-sm">
-									<AvatarImage src={getVillainImage(player.villainId)} />
-								</Avatar>
-								{getVillainName(player.villainId)}
-							</span>
-							{player.isWinner && (
-								<Badge className="bg-green-500 text-white">Vincitore 👑</Badge>
-							)}
-						</div>
+							href={`/stats/villains/${player.villainId}`}
+							className="block hover:bg-gradient-to-tl hover:from-pink-500/25 hover:to-indigo-800/25">
+							<div className="flex justify-between items-center px-6 py-2">
+								<span
+									className={`flex items-center gap-2 text-sm ${
+										player.isWinner ? 'font-medium' : 'font-light'
+									}`}>
+									<Avatar className="size-8 rounded-sm">
+										<AvatarImage src={getVillainImage(player.villainId)} />
+									</Avatar>
+									{getVillainName(player.villainId)}
+								</span>
+								{player.isWinner && (
+									<Badge className="bg-green-500 text-white">
+										Vincitore 👑
+									</Badge>
+								)}
+							</div>
+						</Link>
 					))}
 				</div>
 			</CardContent>

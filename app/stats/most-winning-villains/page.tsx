@@ -9,6 +9,7 @@ import {
 	TableRow,
 } from '@/components/ui/table';
 import { getMostWinningVillains, getVillainImage } from '@/lib/villainUtils';
+import Link from 'next/link';
 
 export default function MostWinningVillainsPage() {
 	const sortedVillains = getMostWinningVillains();
@@ -38,11 +39,15 @@ export default function MostWinningVillainsPage() {
 						{sortedVillains.map((villain, index) => (
 							<TableRow key={villain.id}>
 								<TableCell className="font-medium">#{index + 1}</TableCell>
-								<TableCell className="font-medium flex items-center gap-2">
-									<Avatar className="size-8 rounded-sm">
-										<AvatarImage src={getVillainImage(villain.id)} />
-									</Avatar>
-									{villain.name}
+								<TableCell className="font-medium">
+									<Link
+										href={`/stats/villains/${villain.id}`}
+										className="flex items-center gap-2 hover:text-primary transition-colors">
+										<Avatar className="size-8 rounded-sm">
+											<AvatarImage src={getVillainImage(villain.id)} />
+										</Avatar>
+										{villain.name}
+									</Link>
 								</TableCell>
 								<TableCell className="text-center">{villain.wins}</TableCell>
 								<TableCell className="text-center">{villain.total}</TableCell>

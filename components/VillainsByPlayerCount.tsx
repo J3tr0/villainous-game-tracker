@@ -73,12 +73,14 @@ export default function VillainsByPlayerCount() {
 								{getTopVillainsForPlayerCount(count).map((villain) => (
 									<TableRow key={villain.id}>
 										<TableCell className="font-medium">
-											<div className="flex items-center gap-2">
+											<Link
+												href={`/stats/villains/${villain.id}`}
+												className="flex items-center gap-2 hover:text-primary transition-colors">
 												<Avatar className="size-8 rounded-sm">
 													<AvatarImage src={getVillainImage(villain.id)} />
 												</Avatar>
 												<span className="truncate">{villain.name}</span>
-											</div>
+											</Link>
 										</TableCell>
 										<TableCell className="text-center font-medium">
 											{villain.wins}
