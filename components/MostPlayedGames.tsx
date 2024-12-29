@@ -1,4 +1,5 @@
 import { games } from '@/data/games';
+import { formatPercentage, getPlayerCounts } from '@/lib/villainUtils';
 import {
 	Table,
 	TableBody,
@@ -10,7 +11,7 @@ import {
 } from './ui/table';
 
 export default function MostPlayedGames() {
-	// Calcola il numero totale di partite
+	const playerCounts = getPlayerCounts();
 	const totalGames = games.length;
 
 	// Calcola il numero di partite per ogni numero di giocatori
@@ -20,11 +21,13 @@ export default function MostPlayedGames() {
 	}, {} as Record<number, number>);
 
 	// Converti in array e ordina per numero di partite (decrescente)
-	const sortedStats = Object.entries(playerCountStats)
-		.map(([players, count]) => ({
-			players: Number(players),
-			count,
-			percentage: ((count / totalGames) * 100).toFixed(1),
+	const sortedStats = playerCounts
+		.map((count) => ({
+			players: count,
+			count: playerCountStats[count] || 0,
+			percentage: formatPercentage(
+				((playerCountStats[count] || 0) / totalGames) * 100
+			),
 		}))
 		.sort((a, b) => b.count - a.count);
 

@@ -8,36 +8,10 @@ import {
 	TableHeader,
 	TableRow,
 } from '@/components/ui/table';
-import { villains } from '@/data/data';
-import { games } from '@/data/games';
+import { getMostWinningVillains, getVillainImage } from '@/lib/villainUtils';
 
 export default function MostWinningVillainsPage() {
-	const villainStats = games.reduce((acc, game) => {
-		game.players.forEach((player) => {
-			if (!acc[player.villainId]) {
-				acc[player.villainId] = { wins: 0, total: 0 };
-			}
-			acc[player.villainId].total += 1;
-			if (player.isWinner) {
-				acc[player.villainId].wins += 1;
-			}
-		});
-		return acc;
-	}, {} as Record<string, { wins: number; total: number }>);
-
-	const sortedVillains = Object.entries(villainStats)
-		.map(([id, stats]) => ({
-			id,
-			name: villains.find((v) => v.id === id)?.name || id,
-			wins: stats.wins,
-			total: stats.total,
-			winRate: ((stats.wins / stats.total) * 100).toFixed(1),
-		}))
-		.sort((a, b) => b.wins - a.wins || Number(b.winRate) - Number(a.winRate));
-
-	const getVillainImage = (villainId: string) => {
-		return villains.find((v) => v.id === villainId)?.img || villainId;
-	};
+	const sortedVillains = getMostWinningVillains();
 
 	return (
 		<div className="flex flex-col min-h-screen mt-8">

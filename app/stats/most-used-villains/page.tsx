@@ -8,31 +8,10 @@ import {
 	TableHeader,
 	TableRow,
 } from '@/components/ui/table';
-import { villains } from '@/data/data';
-import { games } from '@/data/games';
+import { getMostUsedVillains, getVillainImage } from '@/lib/villainUtils';
 
 export default function MostUsedVillainsPage() {
-	const totalPlays = games.reduce((sum, game) => sum + game.players.length, 0);
-
-	const villainUsage = games.reduce((acc, game) => {
-		game.players.forEach((player) => {
-			acc[player.villainId] = (acc[player.villainId] || 0) + 1;
-		});
-		return acc;
-	}, {} as Record<string, number>);
-
-	const sortedVillains = Object.entries(villainUsage)
-		.map(([id, count]) => ({
-			id,
-			count,
-			name: villains.find((v) => v.id === id)?.name || id,
-			percentage: ((count / totalPlays) * 100).toFixed(1),
-		}))
-		.sort((a, b) => b.count - a.count);
-
-	const getVillainImage = (villainId: string) => {
-		return villains.find((v) => v.id === villainId)?.img || villainId;
-	};
+	const sortedVillains = getMostUsedVillains();
 
 	return (
 		<div className="flex flex-col min-h-screen mt-8">

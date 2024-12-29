@@ -1,17 +1,10 @@
 import { Avatar, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { villains } from '@/data/data';
 import { GameResult } from '@/lib/type';
+import { getVillainImage, getVillainName } from '@/lib/villainUtils';
 
 export function GameCard({ game }: { game: GameResult }) {
-	const getVillainName = (villainId: string) => {
-		return villains.find((v) => v.id === villainId)?.name || villainId;
-	};
-	const getVillainImage = (villainId: string) => {
-		return villains.find((v) => v.id === villainId)?.img || villainId;
-	};
-
 	return (
 		<Card className="rounded-sm">
 			<CardHeader className="py-2 bg-gradient-to-br from-zinc-200 to-zinc-50 dark:from-zinc-900 dark:to-zinc-800 rounded-t-sm">
@@ -43,7 +36,6 @@ export function GameCard({ game }: { game: GameResult }) {
 								<Avatar className="size-8 rounded-sm">
 									<AvatarImage src={getVillainImage(player.villainId)} />
 								</Avatar>
-
 								{getVillainName(player.villainId)}
 							</span>
 							{player.isWinner && (

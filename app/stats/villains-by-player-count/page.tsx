@@ -8,27 +8,17 @@ import {
 	TableRow,
 } from '@/components/ui/table';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { villains } from '@/data/data';
-import { games } from '@/data/games';
+import {
+	formatPercentage,
+	getPlayerCounts,
+	getVillainImage,
+	getVillainName,
+	getVillainStatsByPlayerCount,
+} from '@/lib/villainUtils';
 
 export default function VillainsByPlayerCountPage() {
-	// Calcola le statistiche per ogni villain per ogni numero di giocatori
-	const villainStatsByPlayerCount = games.reduce((acc, game) => {
-		if (!acc[game.numberOfPlayers]) {
-			acc[game.numberOfPlayers] = {};
-		}
-
-		game.players.forEach((player) => {
-			if (!acc[game.numberOfPlayers][player.villainId]) {
-				acc[game.numberOfPlayers][player.villainId] = { wins: 0, total: 0 };
-			}
-			acc[game.numberOfPlayers][player.villainId].total += 1;
-			if (player.isWinner) {
-				acc[game.numberOfPlayers][player.villainId].wins += 1;
-			}
-		});
-		return acc;
-	}, {} as Record<number, Record<string, { wins: number; total: number }>>);
+	const villainStatsByPlayerCount = getVillainStatsByPlayerCount();
+	const playerCounts = getPlayerCounts();
 
 	// Funzione per ottenere tutti i villain per un dato numero di giocatori
 	const getVillainsForPlayerCount = (playerCount: number) => {
@@ -36,21 +26,13 @@ export default function VillainsByPlayerCountPage() {
 		return Object.entries(stats)
 			.map(([id, { wins, total }]) => ({
 				id,
-				name: villains.find((v) => v.id === id)?.name || id,
+				name: getVillainName(id),
 				wins,
 				total,
-				winRate: total > 0 ? ((wins / total) * 100).toFixed(1) : '0.0',
+				winRate: total > 0 ? formatPercentage((wins / total) * 100) : '0.0',
 			}))
 			.sort((a, b) => b.wins - a.wins || Number(b.winRate) - Number(a.winRate));
 	};
-
-	const getVillainImage = (villainId: string) => {
-		return villains.find((v) => v.id === villainId)?.img || '';
-	};
-
-	const playerCounts = [
-		...new Set(games.map((game) => game.numberOfPlayers)),
-	].sort();
 
 	return (
 		<div className="flex flex-col min-h-screen mt-8">

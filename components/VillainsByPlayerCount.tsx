@@ -1,13 +1,18 @@
 import { Avatar, AvatarImage } from '@/components/ui/avatar';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { villains } from '@/data/data';
-import { games } from '@/data/games';
+import {
+	formatPercentage,
+	getPlayerCounts,
+	getVillainImage,
+	getVillainName,
+	getVillainStatsByPlayerCount,
+	sortVillainsByWins,
+} from '@/lib/villainUtils';
 import { ArrowRight } from 'lucide-react';
 import Link from 'next/link';
 import {
 	Table,
 	TableBody,
-	TableCaption,
 	TableCell,
 	TableHead,
 	TableHeader,
@@ -15,49 +20,21 @@ import {
 } from './ui/table';
 
 export default function VillainsByPlayerCount() {
-	// Calcola le statistiche per ogni villain per ogni numero di giocatori
-	const villainStatsByPlayerCount = games.reduce((acc, game) => {
-		// Inizializza l'oggetto per questo numero di giocatori se non esiste
-		if (!acc[game.numberOfPlayers]) {
-			acc[game.numberOfPlayers] = {};
-		}
+	const villainStatsByPlayerCount = getVillainStatsByPlayerCount();
+	const playerCounts = getPlayerCounts();
 
-		// Aggiorna le statistiche per ogni villain nella partita
-		game.players.forEach((player) => {
-			if (!acc[game.numberOfPlayers][player.villainId]) {
-				acc[game.numberOfPlayers][player.villainId] = { wins: 0, total: 0 };
-			}
-			acc[game.numberOfPlayers][player.villainId].total += 1;
-			if (player.isWinner) {
-				acc[game.numberOfPlayers][player.villainId].wins += 1;
-			}
-		});
-		return acc;
-	}, {} as Record<number, Record<string, { wins: number; total: number }>>);
-
-	// Funzione per ottenere i top 5 villain per un dato numero di giocatori
 	const getTopVillainsForPlayerCount = (playerCount: number) => {
 		const stats = villainStatsByPlayerCount[playerCount] || {};
-		return Object.entries(stats)
-			.map(([id, { wins, total }]) => ({
+		return sortVillainsByWins(
+			Object.entries(stats).map(([id, { wins, total }]) => ({
 				id,
-				name: villains.find((v) => v.id === id)?.name || id,
+				name: getVillainName(id),
 				wins,
 				total,
-				winRate: total > 0 ? ((wins / total) * 100).toFixed(1) : '0.0',
+				winRate: total > 0 ? formatPercentage((wins / total) * 100) : '0.0',
 			}))
-			.sort((a, b) => b.wins - a.wins || Number(b.winRate) - Number(a.winRate))
-			.slice(0, 5);
+		).slice(0, 5);
 	};
-
-	const getVillainImage = (villainId: string) => {
-		return villains.find((v) => v.id === villainId)?.img || '';
-	};
-
-	// Trova tutti i formati di gioco disponibili
-	const playerCounts = [
-		...new Set(games.map((game) => game.numberOfPlayers)),
-	].sort();
 
 	return (
 		<section>
@@ -84,9 +61,6 @@ export default function VillainsByPlayerCount() {
 						key={count}
 						value={count.toString()}>
 						<Table>
-							<TableCaption>
-								I Villain con più vittorie per numero di giocatori.
-							</TableCaption>
 							<TableHeader>
 								<TableRow>
 									<TableHead className="w-[50%]">Villain</TableHead>

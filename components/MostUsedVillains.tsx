@@ -1,6 +1,5 @@
 import { Avatar, AvatarImage } from '@/components/ui/avatar';
-import { villains } from '@/data/data';
-import { games } from '@/data/games';
+import { getMostUsedVillains, getVillainImage } from '@/lib/villainUtils';
 import { ArrowRight } from 'lucide-react';
 import Link from 'next/link';
 import {
@@ -14,31 +13,7 @@ import {
 } from './ui/table';
 
 export default function MostUsedVillains() {
-	// Calcola il numero totale di "slot giocatore" in tutte le partite
-	const totalPlays = games.reduce((sum, game) => sum + game.players.length, 0);
-
-	// Calcola il numero di partite per ogni villain
-	const villainUsage = games.reduce((acc, game) => {
-		game.players.forEach((player) => {
-			acc[player.villainId] = (acc[player.villainId] || 0) + 1;
-		});
-		return acc;
-	}, {} as Record<string, number>);
-
-	// Crea array di oggetti con id, conteggio e percentuale
-	const sortedVillains = Object.entries(villainUsage)
-		.map(([id, count]) => ({
-			id,
-			count,
-			name: villains.find((v) => v.id === id)?.name || id,
-			percentage: ((count / totalPlays) * 100).toFixed(1),
-		}))
-		.sort((a, b) => b.count - a.count)
-		.slice(0, 5);
-
-	const getVillainImage = (villainId: string) => {
-		return villains.find((v) => v.id === villainId)?.img || villainId;
-	};
+	const villains = getMostUsedVillains(5);
 
 	return (
 		<section>
@@ -51,22 +26,26 @@ export default function MostUsedVillains() {
 				<TableCaption>I Villain più usati nelle partite.</TableCaption>
 				<TableHeader>
 					<TableRow>
-						<TableHead className="text-xs uppercase">Villain</TableHead>
-						<TableHead className="text-xs uppercase text-center">#</TableHead>
-						<TableHead className="text-xs uppercase text-center">%</TableHead>
+						<TableHead className="w-[50%]">Villain</TableHead>
+						<TableHead className="text-center">#</TableHead>
+						<TableHead className="text-center">%</TableHead>
 					</TableRow>
 				</TableHeader>
 				<TableBody>
-					{sortedVillains.map((villain) => (
+					{villains.map((villain) => (
 						<TableRow key={villain.id}>
-							<TableCell className="font-medium flex items-center gap-2">
-								<Avatar className="size-8 rounded-sm">
-									<AvatarImage src={getVillainImage(villain.id)} />
-								</Avatar>
-								{villain.name}
+							<TableCell className="font-medium">
+								<div className="flex items-center gap-2">
+									<Avatar className="size-8 rounded-sm">
+										<AvatarImage src={getVillainImage(villain.id)} />
+									</Avatar>
+									<span className="truncate">{villain.name}</span>
+								</div>
 							</TableCell>
-							<TableCell className="text-center">{villain.count}</TableCell>
-							<TableCell className="text-center">
+							<TableCell className="text-center font-medium">
+								{villain.count}
+							</TableCell>
+							<TableCell className="text-center font-medium">
 								{villain.percentage}%
 							</TableCell>
 						</TableRow>
