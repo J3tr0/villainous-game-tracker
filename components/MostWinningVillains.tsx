@@ -40,7 +40,7 @@ export default async function MostWinningVillains() {
 					winRate: ((wins / v._count) * 100).toFixed(1),
 				};
 			})
-			.sort((a, b) => b.wins - a.wins)
+			.sort((a, b) => parseFloat(b.winRate) - parseFloat(a.winRate))
 			.slice(0, 5);
 
 		// Se non ci sono vincitori, mostra un messaggio

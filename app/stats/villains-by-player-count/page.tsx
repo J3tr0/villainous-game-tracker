@@ -30,10 +30,9 @@ export default async function VillainsByPlayerCountPage() {
 	const getVillainsForPlayerCount = (playerCount: number) => {
 		return villainStats
 			.map(({ id, stats }) => {
-				const playerStats = stats.find(
+				const [, total, wins] = stats.find(
 					([players]) => players === playerCount
 				) || [0, 0, 0];
-				const [, total, wins] = playerStats;
 				return {
 					id,
 					name: getVillainName(id),
@@ -42,7 +41,7 @@ export default async function VillainsByPlayerCountPage() {
 					winRate: total > 0 ? ((wins / total) * 100).toFixed(1) + '%' : '0.0%',
 				};
 			})
-			.sort((a, b) => b.wins - a.wins);
+			.sort((a, b) => parseFloat(b.winRate) - parseFloat(a.winRate));
 	};
 
 	return (

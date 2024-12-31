@@ -45,18 +45,17 @@ export default async function VillainsByPlayerCount() {
 				const stats = totals
 					.map((total) => {
 						const win = wins.find((w) => w.villainId === total.villainId);
+						const winRate =
+							((win?._count.villainId ?? 0) / total._count.villainId) * 100;
 						return {
 							id: total.villainId,
 							name: getVillainName(total.villainId),
 							total: total._count.villainId,
 							wins: win?._count.villainId ?? 0,
-							winRate: (
-								((win?._count.villainId ?? 0) / total._count.villainId) *
-								100
-							).toFixed(1),
+							winRate: winRate.toFixed(1),
 						};
 					})
-					.sort((a, b) => b.wins - a.wins)
+					.sort((a, b) => parseFloat(b.winRate) - parseFloat(a.winRate))
 					.slice(0, 5);
 
 				return { count: numberOfPlayers, stats };
@@ -73,11 +72,12 @@ export default async function VillainsByPlayerCount() {
 				<Tabs
 					defaultValue={playerCounts[0]?.numberOfPlayers?.toString() || '0'}
 					className="w-full">
-					<TabsList className="grid w-full grid-cols-5 mb-4">
+					<TabsList className="grid w-full grid-cols-5 mb-4 rounded-sm">
 						{playerCounts.map(({ numberOfPlayers }) => (
 							<TabsTrigger
 								key={numberOfPlayers}
-								value={numberOfPlayers.toString()}>
+								value={numberOfPlayers.toString()}
+								className="rounded-sm">
 								{numberOfPlayers}{' '}
 								<span className="hidden sm:inline ml-1">giocatori</span>
 							</TabsTrigger>

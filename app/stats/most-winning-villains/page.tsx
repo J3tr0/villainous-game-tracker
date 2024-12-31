@@ -13,6 +13,7 @@ import Link from 'next/link';
 
 export default async function MostWinningVillainsPage() {
 	const villains = await getMostWinningVillains();
+	villains.sort((a, b) => parseFloat(b.winRate) - parseFloat(a.winRate));
 
 	return (
 		<div className="flex flex-col min-h-screen mt-8">
@@ -51,9 +52,7 @@ export default async function MostWinningVillainsPage() {
 								</TableCell>
 								<TableCell className="text-center">{villain.wins}</TableCell>
 								<TableCell className="text-center">{villain.total}</TableCell>
-								<TableCell className="text-center">
-									{villain.winRate}
-								</TableCell>
+								<TableCell className="text-center">{villain.winRate}</TableCell>
 							</TableRow>
 						))}
 					</TableBody>
