@@ -10,7 +10,6 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { villains } from '@/data/data';
 import {
-	formatPercentage,
 	getPlayerCounts,
 	getVillainImage,
 	getVillainName,
@@ -40,7 +39,7 @@ export default async function VillainsByPlayerCountPage() {
 					name: getVillainName(id),
 					wins,
 					total,
-					winRate: total > 0 ? formatPercentage(wins, total) : '0.0',
+					winRate: total > 0 ? ((wins / total) * 100).toFixed(1) + '%' : '0.0%',
 				};
 			})
 			.sort((a, b) => b.wins - a.wins);
@@ -104,7 +103,7 @@ export default async function VillainsByPlayerCountPage() {
 												{villain.total}
 											</TableCell>
 											<TableCell className="text-center">
-												{villain.winRate}%
+												{villain.winRate}
 											</TableCell>
 										</TableRow>
 									))}

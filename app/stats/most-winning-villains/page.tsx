@@ -52,7 +52,7 @@ export default async function MostWinningVillainsPage() {
 								<TableCell className="text-center">{villain.wins}</TableCell>
 								<TableCell className="text-center">{villain.total}</TableCell>
 								<TableCell className="text-center">
-									{villain.winRate}%
+									{villain.winRate}
 								</TableCell>
 							</TableRow>
 						))}
