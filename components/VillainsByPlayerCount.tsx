@@ -1,5 +1,5 @@
-import { Avatar, AvatarImage } from '@/components/ui/avatar';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { VillainLink } from '@/components/VillainLink';
 import { villains } from '@/data/data';
 import { prisma } from '@/lib/db';
 import { ArrowRight } from 'lucide-react';
@@ -106,18 +106,14 @@ export default async function VillainsByPlayerCount() {
 							</TableHeader>
 							<TableBody>
 								{stats.map((villain) => (
-									<TableRow key={villain.id}>
+									<TableRow
+										key={villain.id}
+										className="hover:bg-gradient-to-tl hover:from-pink-500/25 hover:to-indigo-800/25">
 										<TableCell className="font-medium">
-											<Link
-												href={`/stats/villains/${villain.id}`}
-												className="flex items-center gap-2 hover:text-primary transition-colors">
-												<Avatar className="size-8 rounded-sm">
-													<AvatarImage
-														src={villains.find((v) => v.id === villain.id)?.img}
-													/>
-												</Avatar>
-												<span className="truncate">{villain.name}</span>
-											</Link>
+											<VillainLink
+												villainId={villain.id}
+												className="flex items-center gap-2 hover:text-primary transition-colors"
+											/>
 										</TableCell>
 										<TableCell className="text-center font-medium">
 											{villain.wins}

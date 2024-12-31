@@ -1,9 +1,7 @@
-import { Avatar, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { GameWithPlayers } from '@/lib/types';
-import { getVillainImage, getVillainName } from '@/lib/villainUtils';
-import Link from 'next/link';
+import { GameVillainLink } from './GameVillainLink';
 
 interface GameCardProps {
 	game: GameWithPlayers;
@@ -31,27 +29,11 @@ export function GameCard({ game }: GameCardProps) {
 			<CardContent className="pb-2 px-0 mb-6">
 				<div className="space-y-1">
 					{game.players.map((player, index) => (
-						<Link
+						<GameVillainLink
 							key={index}
-							href={`/stats/villains/${player.villainId}`}
-							className="block hover:bg-gradient-to-tl hover:from-pink-500/25 hover:to-indigo-800/25">
-							<div className="flex justify-between items-center px-6 py-2">
-								<span
-									className={`flex items-center gap-2 text-sm ${
-										player.isWinner ? 'font-medium' : 'font-light'
-									}`}>
-									<Avatar className="size-8 rounded-sm">
-										<AvatarImage src={getVillainImage(player.villainId)} />
-									</Avatar>
-									{getVillainName(player.villainId)}
-								</span>
-								{player.isWinner && (
-									<Badge className="bg-green-500 text-white">
-										Vincitore 👑
-									</Badge>
-								)}
-							</div>
-						</Link>
+							villainId={player.villainId}
+							isWinner={player.isWinner}
+						/>
 					))}
 				</div>
 			</CardContent>
