@@ -1,5 +1,11 @@
 import { Game as PrismaGame, Player as PrismaPlayer } from '@prisma/client';
 
+export interface Villain {
+	id: string;
+	name: string;
+	img?: string;
+}
+
 export type GameWithPlayers = PrismaGame & {
 	players: PrismaPlayer[];
 	createdBy?: string;

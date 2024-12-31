@@ -1,4 +1,4 @@
-import { Villain } from '@/lib/type';
+import { Villain } from '@/lib/types';
 
 export const villains: Villain[] = [
 	{ id: 'malefica', name: 'Malefica', img: '/villains/Maleficent.webp' },
