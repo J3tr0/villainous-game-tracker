@@ -19,6 +19,10 @@ Un'applicazione web per tenere traccia delle tue partite di Disney Villainous e 
 - [Prisma](https://www.prisma.io/)
 - [shadcn/ui](https://ui.shadcn.com/)
 
+## Sviluppo
+
+Questo progetto è stato sviluppato con l'assistenza di [Cursor](https://cursor.sh/), un editor di codice potenziato dall'intelligenza artificiale che ha contribuito a migliorare la qualità e l'efficienza del codice.
+
 ## Disclaimer
 
 Questa applicazione è un progetto fan-made e non è affiliata, associata, autorizzata, approvata da, o in alcun modo ufficialmente collegata a Disney, Ravensburger, o qualsiasi delle loro filiali o sussidiarie.
