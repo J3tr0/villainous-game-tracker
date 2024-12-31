@@ -6,6 +6,18 @@ export interface Villain {
 	img?: string;
 }
 
+export interface GameResult {
+	id?: string;
+	date: Date;
+	numberOfPlayers: number;
+	createdBy?: string;
+	players: {
+		villainId: string;
+		isWinner: boolean;
+	}[];
+	name?: string;
+}
+
 export type GameWithPlayers = PrismaGame & {
 	players: PrismaPlayer[];
 	createdBy?: string;
@@ -24,14 +36,3 @@ export type GamesByPlayerCount = {
 	wins: number;
 	winRate: string;
 }[];
-
-export interface GameResult {
-	id: string;
-	date: Date;
-	numberOfPlayers: number;
-	createdBy?: string;
-	players: {
-		villainId: string;
-		isWinner: boolean;
-	}[];
-}

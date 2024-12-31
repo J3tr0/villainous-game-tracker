@@ -10,9 +10,8 @@ async function seed() {
 	for (const game of games) {
 		await prisma.game.create({
 			data: {
-				date: game.date,
 				numberOfPlayers: game.numberOfPlayers,
-				createdBy: game.createdBy,
+				date: game.date,
 				players: {
 					create: game.players,
 				},
