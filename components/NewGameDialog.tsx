@@ -25,10 +25,14 @@ import {
 	SelectValue,
 } from '@/components/ui/select';
 import { villains } from '@/data/data';
+import { gameSchema } from '@/lib/validations/game';
 import { getVillainImage, getVillainName } from '@/lib/villainUtils';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Plus } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { useState } from 'react';
 import { useFieldArray, useForm } from 'react-hook-form';
+import { toast } from 'sonner';
 import * as z from 'zod';
 import { Switch } from './ui/switch';
 
@@ -47,6 +51,9 @@ const formSchema = z.object({
 type FormValues = z.infer<typeof formSchema>;
 
 export function NewGameDialog() {
+	const router = useRouter();
+	const [isSubmitting, setIsSubmitting] = useState(false);
+
 	const form = useForm<FormValues>({
 		resolver: zodResolver(formSchema),
 		defaultValues: {
@@ -82,9 +89,63 @@ export function NewGameDialog() {
 		}
 	};
 
-	const onSubmit = (data: FormValues) => {
-		console.log(data);
-		// Qui implementeremo il salvataggio della partita
+	const onSubmit = async (data: FormValues) => {
+		try {
+			setIsSubmitting(true);
+
+			// Validazione lato client
+			const validationResult = gameSchema.safeParse({
+				numberOfPlayers: parseInt(data.numberOfPlayers),
+				players: data.players,
+			});
+
+			if (!validationResult.success) {
+				toast.error('Dati non validi', {
+					description: validationResult.error.issues
+						.map((issue) => issue.message)
+						.join(', '),
+				});
+				return;
+			}
+
+			const response = await fetch('/api/games', {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json',
+				},
+				body: JSON.stringify(validationResult.data),
+			});
+
+			if (!response.ok) {
+				const errorData = await response.json();
+				throw new Error(
+					errorData.error || 'Errore nel salvataggio della partita'
+				);
+			}
+
+			toast.success('Partita salvata con successo');
+
+			// Reset del form e chiusura dialog
+			form.reset({
+				numberOfPlayers: '2',
+				date: new Date(),
+				players: [
+					{ villainId: '', isWinner: false },
+					{ villainId: '', isWinner: false },
+				],
+			});
+			router.refresh();
+		} catch (error) {
+			console.error('Errore:', error);
+			toast.error('Errore', {
+				description:
+					error instanceof Error
+						? error.message
+						: 'Errore nel salvataggio della partita',
+			});
+		} finally {
+			setIsSubmitting(false);
+		}
 	};
 
 	const onOpenChange = (open: boolean) => {
@@ -158,12 +219,6 @@ export function NewGameDialog() {
 									.filter((_, i) => i !== index)
 									.map((_, i) => form.watch(`players.${i}.villainId`))
 									.filter(Boolean);
-
-								// Controlla se c'è già un vincitore in un altro campo
-								const hasWinner = fields
-									.filter((_, i) => i !== index)
-									.map((_, i) => form.watch(`players.${i}.isWinner`))
-									.some(Boolean);
 
 								// Ottieni il valore corrente del villain
 								const currentVillainId = form.watch(
@@ -265,7 +320,11 @@ export function NewGameDialog() {
 							})}
 						</div>
 
-						<Button type="submit">Salva partita</Button>
+						<Button
+							type="submit"
+							disabled={isSubmitting}>
+							{isSubmitting ? 'Salvataggio...' : 'Salva partita'}
+						</Button>
 					</form>
 				</Form>
 			</DialogContent>
