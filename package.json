@@ -8,8 +8,7 @@
 		"start": "next start",
 		"lint": "next lint",
 		"seed": "tsx scripts/seed.ts",
-		"clean": "tsx scripts/clean.ts",
-		"convert-csv": "tsx scripts/csvToTs.ts"
+		"clean": "tsx scripts/clean.ts"
 	},
 	"dependencies": {
 		"@hookform/resolvers": "^3.9.1",
