@@ -40,6 +40,20 @@ function useScreenSize() {
 export function RecentGames({ games }: RecentGamesProps) {
 	const gamesCount = useScreenSize();
 
+	// Se non ci sono partite, mostra un messaggio
+	if (!games || games.length === 0) {
+		return (
+			<section className="mt-8">
+				<h2 className="text-2xl font-bold mb-4 uppercase">
+					<span className="bg-clip-text text-transparent bg-gradient-to-tl from-pink-500 to-indigo-800">
+						Ultime partite inserite
+					</span>
+				</h2>
+				<p className="text-muted-foreground">Nessuna partita disponibile</p>
+			</section>
+		);
+	}
+
 	// Prendiamo le ultime N partite in base alla dimensione dello schermo
 	const recentGames = [...games]
 		.sort((a, b) => b.date.getTime() - a.date.getTime())
