@@ -14,11 +14,11 @@ import { format } from 'date-fns';
 import { it } from 'date-fns/locale';
 import { notFound } from 'next/navigation';
 
-interface PageProps {
-	params: { id: string };
+interface Props {
+	params: Promise<{ id: string }>;
 }
 
-export default async function VillainStatsPage({ params }: PageProps) {
+export default async function VillainStatsPage({ params }: Props) {
 	const { id } = await params;
 
 	const villain = villains.find((v) => v.id === id);
