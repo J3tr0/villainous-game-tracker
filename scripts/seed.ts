@@ -9,6 +9,7 @@ interface CsvRecord {
 	Vincitore: string;
 	'Data partita': string | '';
 	Nome: string;
+	'Creato da'?: string;
 	[key: `${number}° giocatore`]: string;
 }
 
@@ -68,6 +69,7 @@ async function convertCsvToTs() {
 		const players = [];
 		const numberOfPlayers = parseInt(record['Num. giocatori']);
 		const winner = record['Vincitore'];
+		const createdBy = record['Nome'] || '';
 
 		// Aggiungi i giocatori
 		for (let i = 1; i <= numberOfPlayers; i++) {
@@ -85,6 +87,7 @@ async function convertCsvToTs() {
 			date: parseDate(record['Data partita']),
 			players,
 			name: record['Nome'],
+			createdBy,
 		};
 	});
 
@@ -94,6 +97,7 @@ async function convertCsvToTs() {
 			data: {
 				date: new Date(game.date),
 				numberOfPlayers: game.numberOfPlayers,
+				createdBy: game.createdBy,
 				players: {
 					create: game.players.map((player: GameResult['players'][0]) => ({
 						villainId: player.villainId,

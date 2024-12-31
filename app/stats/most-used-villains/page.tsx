@@ -11,8 +11,8 @@ import {
 import { getMostUsedVillains, getVillainImage } from '@/lib/villainUtils';
 import Link from 'next/link';
 
-export default function MostUsedVillainsPage() {
-	const sortedVillains = getMostUsedVillains();
+export default async function MostUsedVillainsPage() {
+	const villains = await getMostUsedVillains();
 
 	return (
 		<div className="flex flex-col min-h-screen mt-8">
@@ -35,10 +35,10 @@ export default function MostUsedVillainsPage() {
 						</TableRow>
 					</TableHeader>
 					<TableBody>
-						{sortedVillains.map((villain, index) => (
+						{villains.map((villain, index) => (
 							<TableRow key={villain.id}>
-								<TableCell className="font-medium">#{index + 1}</TableCell>
-								<TableCell className="font-medium">
+								<TableCell>#{index + 1}</TableCell>
+								<TableCell>
 									<Link
 										href={`/stats/villains/${villain.id}`}
 										className="flex items-center gap-2 hover:text-primary transition-colors">
@@ -48,10 +48,8 @@ export default function MostUsedVillainsPage() {
 										{villain.name}
 									</Link>
 								</TableCell>
-								<TableCell className="text-center">{villain.count}</TableCell>
-								<TableCell className="text-center">
-									{villain.percentage}%
-								</TableCell>
+								<TableCell className="text-center">{villain.total}</TableCell>
+								<TableCell className="text-center">{villain.winRate}</TableCell>
 							</TableRow>
 						))}
 					</TableBody>

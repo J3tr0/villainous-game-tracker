@@ -24,10 +24,12 @@ export type GameWithPlayers = PrismaGame & {
 };
 
 export type VillainStats = {
-	totalGames: number;
+	id: string;
+	name: string;
+	total: number;
 	wins: number;
-	lastPlayed: Date;
 	winRate: string;
+	lastPlayed?: Date;
 };
 
 export type GamesByPlayerCount = {

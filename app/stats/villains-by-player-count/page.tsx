@@ -8,6 +8,7 @@ import {
 	TableRow,
 } from '@/components/ui/table';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { villains } from '@/data/data';
 import {
 	formatPercentage,
 	getPlayerCounts,
@@ -17,22 +18,32 @@ import {
 } from '@/lib/villainUtils';
 import Link from 'next/link';
 
-export default function VillainsByPlayerCountPage() {
-	const villainStatsByPlayerCount = getVillainStatsByPlayerCount();
-	const playerCounts = getPlayerCounts();
+export default async function VillainsByPlayerCountPage() {
+	const playerCounts = await getPlayerCounts();
+	const villainStats = await Promise.all(
+		villains.map(async (villain) => ({
+			id: villain.id,
+			stats: await getVillainStatsByPlayerCount(villain.id),
+		}))
+	);
 
 	// Funzione per ottenere tutti i villain per un dato numero di giocatori
 	const getVillainsForPlayerCount = (playerCount: number) => {
-		const stats = villainStatsByPlayerCount[playerCount] || {};
-		return Object.entries(stats)
-			.map(([id, { wins, total }]) => ({
-				id,
-				name: getVillainName(id),
-				wins,
-				total,
-				winRate: total > 0 ? formatPercentage((wins / total) * 100) : '0.0',
-			}))
-			.sort((a, b) => b.wins - a.wins || Number(b.winRate) - Number(a.winRate));
+		return villainStats
+			.map(({ id, stats }) => {
+				const playerStats = stats.find(
+					([players]) => players === playerCount
+				) || [0, 0, 0];
+				const [, total, wins] = playerStats;
+				return {
+					id,
+					name: getVillainName(id),
+					wins,
+					total,
+					winRate: total > 0 ? formatPercentage(wins, total) : '0.0',
+				};
+			})
+			.sort((a, b) => b.wins - a.wins);
 	};
 
 	return (

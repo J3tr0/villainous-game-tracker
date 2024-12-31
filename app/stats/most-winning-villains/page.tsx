@@ -11,8 +11,8 @@ import {
 import { getMostWinningVillains, getVillainImage } from '@/lib/villainUtils';
 import Link from 'next/link';
 
-export default function MostWinningVillainsPage() {
-	const sortedVillains = getMostWinningVillains();
+export default async function MostWinningVillainsPage() {
+	const villains = await getMostWinningVillains();
 
 	return (
 		<div className="flex flex-col min-h-screen mt-8">
@@ -36,7 +36,7 @@ export default function MostWinningVillainsPage() {
 						</TableRow>
 					</TableHeader>
 					<TableBody>
-						{sortedVillains.map((villain, index) => (
+						{villains.map((villain, index) => (
 							<TableRow key={villain.id}>
 								<TableCell className="font-medium">#{index + 1}</TableCell>
 								<TableCell className="font-medium">
