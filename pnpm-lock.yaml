@@ -94,7 +94,7 @@ importers:
         specifier: ^19
         version: 19.0.2(@types/react@19.0.2)
       csv-parse:
-        specifier: ^5.6.0
+        specifier: ^5.5.3
         version: 5.6.0
       eslint:
         specifier: ^9
@@ -115,7 +115,7 @@ importers:
         specifier: ^4.2.0
         version: 4.2.0
       tsx:
-        specifier: ^4.19.2
+        specifier: ^4.7.0
         version: 4.19.2
       typescript:
         specifier: ^5
