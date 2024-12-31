@@ -93,7 +93,7 @@ export default async function VillainsByPlayerCount() {
 									<TableRow>
 										<TableHead className="w-[50%]">Villain</TableHead>
 										<TableHead className="text-center">V</TableHead>
-										<TableHead className="text-center">P</TableHead>
+										<TableHead className="text-center">#</TableHead>
 										<TableHead className="text-center">%</TableHead>
 									</TableRow>
 								</TableHeader>
