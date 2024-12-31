@@ -20,7 +20,7 @@ export interface GameResult {
 
 export type GameWithPlayers = PrismaGame & {
 	players: PrismaPlayer[];
-	createdBy?: string;
+	createdBy: string | null;
 };
 
 export type VillainStats = {

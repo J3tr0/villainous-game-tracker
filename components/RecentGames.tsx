@@ -1,7 +1,9 @@
 'use client';
 
 import { GameCard } from '@/components/GameCard';
+import { Button } from '@/components/ui/button';
 import { GameWithPlayers } from '@/lib/types';
+import Link from 'next/link';
 import { useEffect, useState } from 'react';
 
 interface RecentGamesProps {
@@ -14,23 +16,16 @@ function useScreenSize() {
 	useEffect(() => {
 		function handleResize() {
 			if (window.innerWidth >= 1280) {
-				// xl breakpoint
 				setGamesCount(10);
 			} else if (window.innerWidth >= 1024) {
-				// lg breakpoint
 				setGamesCount(8);
 			} else {
 				setGamesCount(6);
 			}
 		}
 
-		// Imposta il valore iniziale
 		handleResize();
-
-		// Aggiungi event listener per il resize
 		window.addEventListener('resize', handleResize);
-
-		// Cleanup
 		return () => window.removeEventListener('resize', handleResize);
 	}, []);
 
@@ -39,8 +34,15 @@ function useScreenSize() {
 
 export function RecentGames({ games }: RecentGamesProps) {
 	const gamesCount = useScreenSize();
+	const [sortedGames, setSortedGames] = useState<GameWithPlayers[]>([]);
 
-	// Se non ci sono partite, mostra un messaggio
+	useEffect(() => {
+		const sorted = [...games].sort(
+			(a, b) => b.date.getTime() - a.date.getTime()
+		);
+		setSortedGames(sorted.slice(0, gamesCount));
+	}, [games, gamesCount]);
+
 	if (!games || games.length === 0) {
 		return (
 			<section className="mt-8">
@@ -54,20 +56,22 @@ export function RecentGames({ games }: RecentGamesProps) {
 		);
 	}
 
-	// Prendiamo le ultime N partite in base alla dimensione dello schermo
-	const recentGames = [...games]
-		.sort((a, b) => b.date.getTime() - a.date.getTime())
-		.slice(0, gamesCount);
-
 	return (
 		<section className="mt-8">
-			<h2 className="text-2xl font-bold mb-4 uppercase">
-				<span className="bg-clip-text text-transparent bg-gradient-to-tl from-pink-500 to-indigo-800">
-					Ultime partite inserite
-				</span>
-			</h2>
+			<div className="flex justify-between items-center mb-4">
+				<h2 className="text-2xl font-bold uppercase">
+					<span className="bg-clip-text text-transparent bg-gradient-to-tl from-pink-500 to-indigo-800">
+						Ultime partite inserite
+					</span>
+				</h2>
+				<Button
+					asChild
+					variant="outline">
+					<Link href="/games">Vedi tutte</Link>
+				</Button>
+			</div>
 			<div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-				{recentGames.map((game) => (
+				{sortedGames.map((game) => (
 					<GameCard
 						key={game.id}
 						game={game}
