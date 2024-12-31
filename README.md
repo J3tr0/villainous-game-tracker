@@ -21,7 +21,7 @@ Un'applicazione web per tenere traccia delle tue partite di Disney Villainous e 
 
 ## Sviluppo
 
-Questo progetto è stato sviluppato con l'assistenza di [Cursor](https://cursor.sh/), un editor di codice potenziato dall'intelligenza artificiale che ha contribuito a migliorare la qualità e l'efficienza del codice.
+Questo progetto è stato sviluppato con l'assistenza di [Cursor](https://cursor.sh/), un editor di codice potenziato dall'intelligenza artificiale che ha contribuito a migliorare la qualità e l'efficienza del codice. Questo file è stato generato da Cursor.
 
 ## Disclaimer
 
