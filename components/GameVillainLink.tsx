@@ -9,7 +9,7 @@ interface GameVillainLinkProps {
 export function GameVillainLink({ villainId, isWinner }: GameVillainLinkProps) {
 	return (
 		<div className="block hover:bg-gradient-to-tl hover:from-pink-500/25 hover:to-indigo-800/25">
-			<div className="flex justify-between items-center px-6 py-2">
+			<div className="flex justify-between items-center px-6 py-2 dark:border-b-2">
 				<VillainLink
 					villainId={villainId}
 					className="block"

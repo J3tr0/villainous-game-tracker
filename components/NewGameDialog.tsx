@@ -30,6 +30,7 @@ import { villains } from '@/data/data';
 import { gameSchema } from '@/lib/validations/game';
 import { getVillainImage, getVillainName } from '@/lib/villainUtils';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { format } from 'date-fns';
 import { Plus } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
@@ -184,6 +185,27 @@ export function NewGameDialog() {
 					<form
 						onSubmit={form.handleSubmit(onSubmit)}
 						className="space-y-4">
+						<FormField
+							control={form.control}
+							name="date"
+							render={({ field }) => (
+								<FormItem>
+									<FormLabel>Data partita</FormLabel>
+									<FormControl>
+										<Input
+											type="date"
+											{...field}
+											value={
+												field.value ? format(field.value, 'yyyy-MM-dd') : ''
+											}
+											onChange={(e) => field.onChange(new Date(e.target.value))}
+											max={format(new Date(), 'yyyy-MM-dd')}
+										/>
+									</FormControl>
+									<FormMessage />
+								</FormItem>
+							)}
+						/>
 						<FormField
 							control={form.control}
 							name="numberOfPlayers"

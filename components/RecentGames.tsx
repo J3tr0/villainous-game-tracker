@@ -5,10 +5,7 @@ import { Button } from '@/components/ui/button';
 import { GameWithPlayers } from '@/lib/types';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
-
-interface RecentGamesProps {
-	games: GameWithPlayers[];
-}
+import useSWR from 'swr';
 
 function useScreenSize() {
 	const [gamesCount, setGamesCount] = useState(6);
@@ -32,16 +29,24 @@ function useScreenSize() {
 	return gamesCount;
 }
 
-export function RecentGames({ games }: RecentGamesProps) {
-	const gamesCount = useScreenSize();
-	const [sortedGames, setSortedGames] = useState<GameWithPlayers[]>([]);
+const fetcher = (url: string) => fetch(url).then((res) => res.json());
 
-	useEffect(() => {
-		const sorted = [...games].sort(
-			(a, b) => b.date.getTime() - a.date.getTime()
-		);
-		setSortedGames(sorted.slice(0, gamesCount));
-	}, [games, gamesCount]);
+export function RecentGames({
+	games: initialGames,
+}: {
+	games: GameWithPlayers[];
+}) {
+	const gamesCount = useScreenSize();
+
+	const { data: games } = useSWR<GameWithPlayers[]>('/api/games', fetcher, {
+		fallbackData: initialGames,
+		refreshInterval: 5000, // Aggiorna ogni 5 secondi
+	});
+
+	const sortedGames =
+		games
+			?.sort((a, b) => b.date.getTime() - a.date.getTime())
+			.slice(0, gamesCount) ?? [];
 
 	if (!games || games.length === 0) {
 		return (
@@ -66,7 +71,8 @@ export function RecentGames({ games }: RecentGamesProps) {
 				</h2>
 				<Button
 					asChild
-					variant="outline">
+					variant="outline"
+					className="bg-gradient-to-tl from-pink-500 to-indigo-800 text-white">
 					<Link href="/games">Vedi tutte</Link>
 				</Button>
 			</div>
