@@ -1,10 +1,11 @@
-import { GameResult } from '@/lib/type';
+import { GameResult } from '@/lib/types';
 
 export const games: GameResult[] = [
 	{
 		id: '1',
 		date: new Date('2024-03-15'),
 		numberOfPlayers: 4,
+		createdBy: 'Marco',
 		players: [
 			{ villainId: 'malefica', isWinner: true },
 			{ villainId: 'ursula', isWinner: false },
@@ -16,6 +17,7 @@ export const games: GameResult[] = [
 		id: '2',
 		date: new Date('2024-03-14'),
 		numberOfPlayers: 3,
+		createdBy: 'Laura',
 		players: [
 			{ villainId: 'ade', isWinner: false },
 			{ villainId: 'scar', isWinner: true },
@@ -26,15 +28,19 @@ export const games: GameResult[] = [
 		id: '3',
 		date: new Date('2024-03-10'),
 		numberOfPlayers: 2,
+		createdBy: 'Sofia',
 		players: [
 			{ villainId: 'malefica', isWinner: false },
 			{ villainId: 'ursula', isWinner: true },
+			{ villainId: 'jafar', isWinner: false },
+			{ villainId: 'cuori', isWinner: false },
 		],
 	},
 	{
 		id: '4',
 		date: new Date('2024-03-08'),
 		numberOfPlayers: 5,
+		createdBy: 'Alessandro',
 		players: [
 			{ villainId: 'crudelia', isWinner: false },
 			{ villainId: 'gothel', isWinner: false },
@@ -47,6 +53,7 @@ export const games: GameResult[] = [
 		id: '5',
 		date: new Date('2024-03-05'),
 		numberOfPlayers: 3,
+		createdBy: 'Giulia',
 		players: [
 			{ villainId: 'malefica', isWinner: true },
 			{ villainId: 'cattiva', isWinner: false },
@@ -57,6 +64,7 @@ export const games: GameResult[] = [
 		id: '6',
 		date: new Date('2024-03-01'),
 		numberOfPlayers: 4,
+		createdBy: 'Luca',
 		players: [
 			{ villainId: 'baubau', isWinner: false },
 			{ villainId: 'sherkhan', isWinner: true },
@@ -68,6 +76,7 @@ export const games: GameResult[] = [
 		id: '7',
 		date: new Date('2024-02-28'),
 		numberOfPlayers: 6,
+		createdBy: 'Chiara',
 		players: [
 			{ villainId: 'malefica', isWinner: false },
 			{ villainId: 'ursula', isWinner: false },
@@ -81,6 +90,7 @@ export const games: GameResult[] = [
 		id: '8',
 		date: new Date('2024-02-25'),
 		numberOfPlayers: 6,
+		createdBy: 'Andrea',
 		players: [
 			{ villainId: 'rattigan', isWinner: false },
 			{ villainId: 'scar', isWinner: false },
@@ -94,6 +104,7 @@ export const games: GameResult[] = [
 		id: '9',
 		date: new Date('2024-02-20'),
 		numberOfPlayers: 5,
+		createdBy: 'Matteo',
 		players: [
 			{ villainId: 'syndrome', isWinner: false },
 			{ villainId: 'lotso', isWinner: false },
@@ -106,6 +117,7 @@ export const games: GameResult[] = [
 		id: '10',
 		date: new Date('2024-02-15'),
 		numberOfPlayers: 6,
+		createdBy: 'Elena',
 		players: [
 			{ villainId: 'cattiva', isWinner: false },
 			{ villainId: 'gambadilegno', isWinner: false },
@@ -119,6 +131,7 @@ export const games: GameResult[] = [
 		id: '11',
 		date: new Date('2024-02-10'),
 		numberOfPlayers: 4,
+		createdBy: 'Francesco',
 		players: [
 			{ villainId: 'baubau', isWinner: true },
 			{ villainId: 'mago', isWinner: false },

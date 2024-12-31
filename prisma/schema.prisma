@@ -11,9 +11,10 @@ datasource db {
 }
 
 model Game {
-  id              Int      @id @default(autoincrement())
-  date            DateTime @default(now())
+  id              String   @id @default(cuid())
+  date            DateTime
   numberOfPlayers Int
+  createdBy       String?
   players         Player[]
 }
 
@@ -22,5 +23,5 @@ model Player {
   villainId String
   isWinner  Boolean @default(false)
   game      Game    @relation(fields: [gameId], references: [id])
-  gameId    Int
+  gameId    String
 }

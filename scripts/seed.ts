@@ -1,41 +1,26 @@
-import { PrismaClient } from '@prisma/client';
-import { games } from '../data/games';
+import { games } from '@/data/games';
+import { prisma } from '@/lib/db';
 
-const prisma = new PrismaClient();
-
-async function main() {
-	console.log('🌱 Inizializzazione del database...');
-
+async function seed() {
 	// Elimina tutti i dati esistenti
 	await prisma.player.deleteMany();
 	await prisma.game.deleteMany();
 
-	console.log('🧹 Database pulito');
-
-	// Importa i giochi
+	// Crea le nuove partite
 	for (const game of games) {
 		await prisma.game.create({
 			data: {
 				date: game.date,
 				numberOfPlayers: game.numberOfPlayers,
+				createdBy: game.createdBy,
 				players: {
-					create: game.players.map((player) => ({
-						villainId: player.villainId,
-						isWinner: player.isWinner,
-					})),
+					create: game.players,
 				},
 			},
 		});
 	}
-
-	console.log('✅ Dati importati con successo');
 }
 
-main()
-	.catch((e) => {
-		console.error("❌ Errore durante l'importazione:", e);
-		process.exit(1);
-	})
-	.finally(async () => {
-		await prisma.$disconnect();
-	});
+seed()
+	.catch(console.error)
+	.finally(() => prisma.$disconnect());

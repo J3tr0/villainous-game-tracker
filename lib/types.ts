@@ -2,6 +2,7 @@ import { Game as PrismaGame, Player as PrismaPlayer } from '@prisma/client';
 
 export type GameWithPlayers = PrismaGame & {
 	players: PrismaPlayer[];
+	createdBy?: string;
 };
 
 export type VillainStats = {
@@ -22,9 +23,8 @@ export interface GameResult {
 	id: string;
 	date: Date;
 	numberOfPlayers: number;
+	createdBy?: string;
 	players: {
-		id: number;
-		gameId: number;
 		villainId: string;
 		isWinner: boolean;
 	}[];

@@ -27,7 +27,8 @@ export default function Header() {
 				alt="Logo Disney Villainous"
 				width={100}
 				height={100}
-				priority
+				loading="lazy"
+				className="w-auto h-auto"
 			/>
 		);
 	}
@@ -42,7 +43,8 @@ export default function Header() {
 			alt="Logo Disney Villainous"
 			width={100}
 			height={100}
-			priority
+			loading="lazy"
+			className="w-auto h-auto"
 		/>
 	);
 

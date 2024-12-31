@@ -2,26 +2,29 @@ import { prisma } from '@/lib/db';
 import { gameSchema } from '@/lib/validations/game';
 import { NextResponse } from 'next/server';
 
-export async function POST(request: Request) {
+export async function POST(req: Request) {
 	try {
-		const body = await request.json();
+		const body = await req.json();
 
-		// Validazione dei dati in ingresso
-		const validationResult = gameSchema.safeParse(body);
+		const gameData = {
+			...body,
+			numberOfPlayers: parseInt(body.numberOfPlayers),
+		};
+
+		const validationResult = gameSchema.safeParse(gameData);
 
 		if (!validationResult.success) {
 			return NextResponse.json(
-				{
-					error: 'Dati non validi',
-					details: validationResult.error.format(),
-				},
+				{ error: 'Dati non validi', issues: validationResult.error.issues },
 				{ status: 400 }
 			);
 		}
 
 		const game = await prisma.game.create({
 			data: {
+				date: new Date(),
 				numberOfPlayers: validationResult.data.numberOfPlayers,
+				createdBy: validationResult.data.createdBy,
 				players: {
 					create: validationResult.data.players,
 				},
@@ -33,7 +36,7 @@ export async function POST(request: Request) {
 
 		return NextResponse.json(game);
 	} catch (error) {
-		console.error('Error:', error);
+		console.error('API error:', error);
 		return NextResponse.json(
 			{ error: 'Errore nel salvataggio della partita' },
 			{ status: 500 }

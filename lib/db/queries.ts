@@ -86,3 +86,44 @@ export async function getTotalPlays() {
 	const result = await prisma.player.count();
 	return result;
 }
+
+export async function createGame(data: {
+	date: Date;
+	numberOfPlayers: number;
+	createdBy?: string;
+	players: { villainId: string; isWinner: boolean }[];
+}) {
+	return prisma.game.create({
+		data: {
+			date: data.date,
+			numberOfPlayers: data.numberOfPlayers,
+			createdBy: data.createdBy,
+			players: {
+				create: data.players,
+			},
+		},
+		include: {
+			players: true,
+		},
+	});
+}
+
+export async function getGames() {
+	return prisma.game.findMany({
+		include: {
+			players: true,
+		},
+		orderBy: {
+			date: 'desc',
+		},
+	});
+}
+
+export async function getGame(id: string) {
+	return prisma.game.findUnique({
+		where: { id },
+		include: {
+			players: true,
+		},
+	});
+}

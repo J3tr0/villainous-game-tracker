@@ -11,7 +11,7 @@ interface GameCardProps {
 
 export function GameCard({ game }: GameCardProps) {
 	return (
-		<Card className="rounded-sm">
+		<Card className="rounded-sm relative">
 			<CardHeader className="py-2 bg-gradient-to-br from-zinc-200 to-zinc-50 dark:from-zinc-900 dark:to-zinc-800 rounded-t-sm">
 				<div className="flex justify-between items-center">
 					<CardTitle className="text-xs uppercase">
@@ -28,7 +28,7 @@ export function GameCard({ game }: GameCardProps) {
 					</Badge>
 				</div>
 			</CardHeader>
-			<CardContent className="pb-6 px-0">
+			<CardContent className="pb-2 px-0 mb-6">
 				<div className="space-y-1">
 					{game.players.map((player, index) => (
 						<Link
@@ -55,6 +55,9 @@ export function GameCard({ game }: GameCardProps) {
 					))}
 				</div>
 			</CardContent>
+			<div className="absolute bottom-0 px-6 py-2 w-full text-xs text-muted-foreground italic text-right">
+				{game.createdBy && `Registrata da ${game.createdBy}`}
+			</div>
 		</Card>
 	);
 }

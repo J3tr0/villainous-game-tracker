@@ -14,14 +14,12 @@ import { format } from 'date-fns';
 import { it } from 'date-fns/locale';
 import { notFound } from 'next/navigation';
 
-type Props = {
-	params: {
-		id: string;
-	};
-};
-
-export default async function VillainStatsPage({ params }: Props) {
-	const { id } = params;
+export default async function VillainStatsPage({
+	params,
+}: {
+	params: { id: string };
+}) {
+	const { id } = await params;
 	const villain = villains.find((v) => v.id === id);
 
 	if (!villain) {

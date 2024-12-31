@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import {
 	Dialog,
 	DialogContent,
+	DialogDescription,
 	DialogHeader,
 	DialogTitle,
 	DialogTrigger,
@@ -17,6 +18,7 @@ import {
 	FormLabel,
 	FormMessage,
 } from '@/components/ui/form';
+import { Input } from '@/components/ui/input';
 import {
 	Select,
 	SelectContent,
@@ -38,11 +40,12 @@ import { Switch } from './ui/switch';
 
 // Schema di validazione
 const formSchema = z.object({
-	numberOfPlayers: z.string(),
 	date: z.date(),
+	numberOfPlayers: z.string(),
+	createdBy: z.string().min(2).max(50).optional().or(z.literal('')),
 	players: z.array(
 		z.object({
-			villainId: z.string(),
+			villainId: z.string().min(1, 'Seleziona un villain'),
 			isWinner: z.boolean(),
 		})
 	),
@@ -51,14 +54,16 @@ const formSchema = z.object({
 type FormValues = z.infer<typeof formSchema>;
 
 export function NewGameDialog() {
+	const [open, setOpen] = useState(false);
 	const router = useRouter();
 	const [isSubmitting, setIsSubmitting] = useState(false);
 
-	const form = useForm<FormValues>({
+	const form = useForm<z.infer<typeof formSchema>>({
 		resolver: zodResolver(formSchema),
 		defaultValues: {
-			numberOfPlayers: '2',
 			date: new Date(),
+			numberOfPlayers: '2',
+			createdBy: '',
 			players: [
 				{ villainId: '', isWinner: false },
 				{ villainId: '', isWinner: false },
@@ -93,26 +98,22 @@ export function NewGameDialog() {
 		try {
 			setIsSubmitting(true);
 
-			// Validazione lato client
-			const validationResult = gameSchema.safeParse({
+			const gameData = {
+				...data,
 				numberOfPlayers: parseInt(data.numberOfPlayers),
-				players: data.players,
-			});
+				createdBy: data.createdBy || undefined,
+			};
+
+			const validationResult = gameSchema.safeParse(gameData);
 
 			if (!validationResult.success) {
-				toast.error('Dati non validi', {
-					description: validationResult.error.issues
-						.map((issue) => issue.message)
-						.join(', '),
-				});
+				toast.error('Dati non validi');
 				return;
 			}
 
 			const response = await fetch('/api/games', {
 				method: 'POST',
-				headers: {
-					'Content-Type': 'application/json',
-				},
+				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify(validationResult.data),
 			});
 
@@ -124,8 +125,6 @@ export function NewGameDialog() {
 			}
 
 			toast.success('Partita salvata con successo');
-
-			// Reset del form e chiusura dialog
 			form.reset({
 				numberOfPlayers: '2',
 				date: new Date(),
@@ -135,8 +134,8 @@ export function NewGameDialog() {
 				],
 			});
 			router.refresh();
+			setOpen(false);
 		} catch (error) {
-			console.error('Errore:', error);
 			toast.error('Errore', {
 				description:
 					error instanceof Error
@@ -148,26 +147,27 @@ export function NewGameDialog() {
 		}
 	};
 
-	const onOpenChange = (open: boolean) => {
-		if (!open) {
-			// Reset del form quando il dialog viene chiuso
-			form.reset({
-				numberOfPlayers: '2',
-				date: new Date(),
-				players: [
-					{ villainId: '', isWinner: false },
-					{ villainId: '', isWinner: false },
-				],
-			});
-		}
-	};
-
 	return (
-		<Dialog onOpenChange={onOpenChange}>
+		<Dialog
+			open={open}
+			onOpenChange={(open) => {
+				setOpen(open);
+				if (!open) {
+					form.reset({
+						numberOfPlayers: '2',
+						date: new Date(),
+						players: [
+							{ villainId: '', isWinner: false },
+							{ villainId: '', isWinner: false },
+						],
+					});
+				}
+			}}>
 			<DialogTrigger asChild>
 				<Button
 					variant="default"
 					size="icon"
+					onClick={() => setOpen(true)}
 					className="bg-gradient-to-tl from-pink-500 to-indigo-800">
 					<Plus className="h-4 w-4" />
 					<span className="sr-only">Aggiungi partita</span>
@@ -175,7 +175,10 @@ export function NewGameDialog() {
 			</DialogTrigger>
 			<DialogContent className="sm:max-w-[425px]">
 				<DialogHeader>
-					<DialogTitle>Nuova partita</DialogTitle>
+					<DialogTitle>Nuova Partita</DialogTitle>
+					<DialogDescription>
+						Inserisci i dettagli della partita
+					</DialogDescription>
 				</DialogHeader>
 				<Form {...form}>
 					<form
@@ -192,7 +195,7 @@ export function NewGameDialog() {
 											field.onChange(value);
 											onPlayerCountChange(value);
 										}}
-										defaultValue={field.value}>
+										defaultValue={field.value.toString()}>
 										<FormControl>
 											<SelectTrigger>
 												<SelectValue placeholder="Seleziona il numero di giocatori" />
@@ -319,6 +322,23 @@ export function NewGameDialog() {
 								);
 							})}
 						</div>
+
+						<FormField
+							control={form.control}
+							name="createdBy"
+							render={({ field }) => (
+								<FormItem>
+									<FormLabel>Registrata da</FormLabel>
+									<FormControl>
+										<Input
+											placeholder="Il tuo nome"
+											{...field}
+										/>
+									</FormControl>
+									<FormMessage />
+								</FormItem>
+							)}
+						/>
 
 						<Button
 							type="submit"
