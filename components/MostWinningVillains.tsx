@@ -14,25 +14,37 @@ import {
 
 export default async function MostWinningVillains() {
 	try {
-		const winners =
-			(await prisma.player.groupBy({
-				by: ['villainId'],
-				where: {
-					isWinner: true,
-				},
-				_count: {
-					villainId: true,
-				},
-				orderBy: {
-					_count: {
-						villainId: 'desc',
-					},
-				},
-				take: 5,
-			})) || [];
+		// Ottieni tutti i totali in una query
+		const totalGames = await prisma.player.groupBy({
+			by: ['villainId'],
+			_count: true,
+		});
+
+		// Ottieni tutte le vittorie in una query
+		const winningGames = await prisma.player.groupBy({
+			by: ['villainId'],
+			where: { isWinner: true },
+			_count: true,
+		});
+
+		// Calcola le statistiche
+		const villainStats = totalGames
+			.map((v) => {
+				const wins =
+					winningGames.find((w) => w.villainId === v.villainId)?._count ?? 0;
+				return {
+					id: v.villainId,
+					name: villains.find((vil) => vil.id === v.villainId)?.name,
+					total: v._count,
+					wins,
+					winRate: ((wins / v._count) * 100).toFixed(1),
+				};
+			})
+			.sort((a, b) => b.wins - a.wins)
+			.slice(0, 5);
 
 		// Se non ci sono vincitori, mostra un messaggio
-		if (!winners.length) {
+		if (!villainStats.length) {
 			return (
 				<section>
 					<h2 className="text-2xl font-bold mb-4 uppercase">
@@ -44,24 +56,6 @@ export default async function MostWinningVillains() {
 				</section>
 			);
 		}
-
-		// Ottieni il totale delle partite per ogni villain
-		const totals = await Promise.all(
-			winners.map(async (winner) => {
-				const total = await prisma.player.count({
-					where: {
-						villainId: winner.villainId,
-					},
-				});
-				return {
-					id: winner.villainId,
-					wins: winner._count.villainId,
-					total,
-					winRate: ((winner._count.villainId / total) * 100).toFixed(1),
-					name: villains.find((v) => v.id === winner.villainId)?.name,
-				};
-			})
-		);
 
 		return (
 			<section>
@@ -80,7 +74,7 @@ export default async function MostWinningVillains() {
 						</TableRow>
 					</TableHeader>
 					<TableBody>
-						{totals.map((villain) => (
+						{villainStats.map((villain) => (
 							<TableRow
 								key={villain.id}
 								className="hover:bg-gradient-to-tl hover:from-pink-500/25 hover:to-indigo-800/25">

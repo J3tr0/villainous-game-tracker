@@ -15,7 +15,7 @@ import {
 export default async function MostUsedVillains() {
 	try {
 		// Ottieni il totale delle partite
-		const totalGames = await prisma.player.count();
+		const totalGames = await prisma.game.count();
 
 		// Se non ci sono partite, mostra un messaggio
 		if (!totalGames) {

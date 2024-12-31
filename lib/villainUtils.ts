@@ -20,7 +20,7 @@ export async function getVillainStats(
 
 	const total = games.length;
 	const wins = games.filter((game) => game.isWinner).length;
-	const winRate = formatPercentage(wins, total);
+	const winRate = ((wins / total) * 100).toFixed(1) + '%';
 	const lastPlayed =
 		games.length > 0
 			? games.sort((a, b) => b.game.date.getTime() - a.game.date.getTime())[0]
@@ -38,33 +38,32 @@ export async function getVillainStats(
 }
 
 export async function getMostUsedVillains(): Promise<VillainStats[]> {
+	const totalGames = await prisma.game.count();
 	const villainCounts = await prisma.player.groupBy({
 		by: ['villainId'],
-		_count: true,
+		_count: { villainId: true },
 		orderBy: { _count: { villainId: 'desc' } },
 	});
 
 	return villainCounts.map((v) => ({
 		id: v.villainId,
 		name: getVillainName(v.villainId),
-		total: v._count,
-		wins: 0, // non serve per questa vista
-		winRate: '0.0',
+		total: v._count.villainId,
+		wins: 0,
+		winRate: ((v._count.villainId / totalGames) * 100).toFixed(1) + '%',
 		lastPlayed: new Date(),
 	}));
 }
 
 export async function getMostWinningVillains(): Promise<VillainStats[]> {
-	const totalGames = await prisma.player.groupBy({
-		by: ['villainId'],
-		_count: true,
-	});
-
-	const winningGames = await prisma.player.groupBy({
-		by: ['villainId'],
-		where: { isWinner: true },
-		_count: true,
-	});
+	const [totalGames, winningGames] = await Promise.all([
+		prisma.player.groupBy({ by: ['villainId'], _count: true }),
+		prisma.player.groupBy({
+			by: ['villainId'],
+			where: { isWinner: true },
+			_count: true,
+		}),
+	]);
 
 	return totalGames
 		.map((v) => {
@@ -75,68 +74,42 @@ export async function getMostWinningVillains(): Promise<VillainStats[]> {
 				name: getVillainName(v.villainId),
 				total: v._count,
 				wins,
-				winRate: formatPercentage(wins, v._count),
-				lastPlayed: new Date(), // non serve per questa vista
+				winRate: ((wins / v._count) * 100).toFixed(1) + '%',
+				lastPlayed: new Date(),
 			};
 		})
 		.sort((a, b) => b.wins - a.wins);
 }
 
-export function formatPercentage(value: number, total: number): string {
-	if (total === 0) return '0.0%';
-	return ((value / total) * 100).toFixed(1) + '%';
-}
-
 export async function getPlayerCounts(): Promise<number[]> {
-	const playerCounts = await prisma.game.groupBy({
+	const counts = await prisma.game.groupBy({
 		by: ['numberOfPlayers'],
-		orderBy: {
-			numberOfPlayers: 'asc',
-		},
+		orderBy: { numberOfPlayers: 'asc' },
 	});
-
-	return playerCounts.map((p) => p.numberOfPlayers);
+	return counts.map((p) => p.numberOfPlayers);
 }
 
 export async function getVillainStatsByPlayerCount(
 	villainId: string
 ): Promise<[number, number, number][]> {
-	const stats = await prisma.game.groupBy({
-		by: ['numberOfPlayers'],
-		where: {
-			players: {
-				some: {
-					villainId,
-				},
-			},
-		},
-		_count: {
-			_all: true,
-		},
-		orderBy: {
-			numberOfPlayers: 'asc',
-		},
-	});
+	const [stats, wins] = await Promise.all([
+		prisma.game.groupBy({
+			by: ['numberOfPlayers'],
+			where: { players: { some: { villainId } } },
+			_count: { _all: true },
+			orderBy: { numberOfPlayers: 'asc' },
+		}),
+		prisma.game.groupBy({
+			by: ['numberOfPlayers'],
+			where: { players: { some: { villainId, isWinner: true } } },
+			_count: { _all: true },
+		}),
+	]);
 
-	const wins = await prisma.game.groupBy({
-		by: ['numberOfPlayers'],
-		where: {
-			players: {
-				some: {
-					villainId,
-					isWinner: true,
-				},
-			},
-		},
-		_count: {
-			_all: true,
-		},
-	});
-
-	return stats.map((stat) => {
-		const winCount =
-			wins.find((w) => w.numberOfPlayers === stat.numberOfPlayers)?._count
-				._all ?? 0;
-		return [stat.numberOfPlayers, stat._count._all, winCount];
-	});
+	return stats.map((stat) => [
+		stat.numberOfPlayers,
+		stat._count._all,
+		wins.find((w) => w.numberOfPlayers === stat.numberOfPlayers)?._count._all ??
+			0,
+	]);
 }

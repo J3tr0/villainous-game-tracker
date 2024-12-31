@@ -31,7 +31,9 @@ export default async function MostUsedVillainsPage() {
 							<TableHead>Posizione</TableHead>
 							<TableHead>Villain</TableHead>
 							<TableHead className="text-center">N. di partite</TableHead>
-							<TableHead className="text-center">% utilizzo</TableHead>
+							<TableHead className="text-center">
+								% sul totale partite
+							</TableHead>
 						</TableRow>
 					</TableHeader>
 					<TableBody>

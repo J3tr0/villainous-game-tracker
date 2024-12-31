@@ -1,7 +1,7 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { VillainLink } from '@/components/VillainLink';
-import { villains } from '@/data/data';
 import { prisma } from '@/lib/db';
+import { getVillainName } from '@/lib/villainUtils';
 import { ArrowRight } from 'lucide-react';
 import Link from 'next/link';
 import {
@@ -15,76 +15,52 @@ import {
 
 export default async function VillainsByPlayerCount() {
 	try {
-		// Ottieni tutti i numeri di giocatori disponibili
-		const playerCounts =
-			(await prisma.game
-				.groupBy({
-					by: ['numberOfPlayers'],
-					orderBy: {
-						numberOfPlayers: 'asc',
-					},
-				})
-				.then((counts) => counts?.map((c) => c.numberOfPlayers))) || [];
+		// Ottieni i numeri di giocatori disponibili
+		const playerCounts = await prisma.game.groupBy({
+			by: ['numberOfPlayers'],
+			orderBy: { numberOfPlayers: 'asc' },
+		});
 
-		// Se non ci sono conteggi, mostra un messaggio
-		if (!playerCounts.length) {
-			return (
-				<section>
-					<h2 className="text-2xl font-bold uppercase mb-4">
-						<span className="bg-clip-text text-transparent bg-gradient-to-tl from-pink-500 to-indigo-800">
-							Statistiche per numero di giocatori
-						</span>
-					</h2>
-					<p className="text-muted-foreground">Nessuna partita disponibile</p>
-				</section>
-			);
-		}
-
-		// Funzione per ottenere le statistiche per un numero specifico di giocatori
-		const getTopVillainsForPlayerCount = async (playerCount: number) => {
-			const villainStats = await prisma.player.groupBy({
-				by: ['villainId'],
-				where: {
-					game: {
-						numberOfPlayers: playerCount,
-					},
-				},
-				_count: {
-					villainId: true,
-				},
-			});
-
-			const statsWithWins = await Promise.all(
-				villainStats.map(async (stat) => {
-					const wins = await prisma.player.count({
-						where: {
-							villainId: stat.villainId,
-							isWinner: true,
-							game: {
-								numberOfPlayers: playerCount,
-							},
-						},
-					});
-
-					return {
-						id: stat.villainId,
-						name: villains.find((v) => v.id === stat.villainId)?.name,
-						wins,
-						total: stat._count.villainId,
-						winRate: ((wins / stat._count.villainId) * 100).toFixed(1),
-					};
-				})
-			);
-
-			return statsWithWins.sort((a, b) => b.wins - a.wins).slice(0, 5);
-		};
-
-		// Ottieni le statistiche per ogni numero di giocatori
+		// Per ogni numero di giocatori, ottieni tutte le statistiche in due query
 		const statsByPlayerCount = await Promise.all(
-			playerCounts.map(async (count) => ({
-				count,
-				stats: await getTopVillainsForPlayerCount(count),
-			}))
+			playerCounts.map(async ({ numberOfPlayers }) => {
+				// Query per i totali
+				const totals = await prisma.player.groupBy({
+					by: ['villainId'],
+					where: { game: { numberOfPlayers } },
+					_count: { villainId: true },
+				});
+
+				// Query per le vittorie
+				const wins = await prisma.player.groupBy({
+					by: ['villainId'],
+					where: {
+						game: { numberOfPlayers },
+						isWinner: true,
+					},
+					_count: { villainId: true },
+				});
+
+				// Calcola le statistiche
+				const stats = totals
+					.map((total) => {
+						const win = wins.find((w) => w.villainId === total.villainId);
+						return {
+							id: total.villainId,
+							name: getVillainName(total.villainId),
+							total: total._count.villainId,
+							wins: win?._count.villainId ?? 0,
+							winRate: (
+								((win?._count.villainId ?? 0) / total._count.villainId) *
+								100
+							).toFixed(1),
+						};
+					})
+					.sort((a, b) => b.wins - a.wins)
+					.slice(0, 5);
+
+				return { count: numberOfPlayers, stats };
+			})
 		);
 
 		return (
@@ -95,14 +71,15 @@ export default async function VillainsByPlayerCount() {
 					</span>
 				</h2>
 				<Tabs
-					defaultValue={playerCounts[0]?.toString() || '0'}
+					defaultValue={playerCounts[0]?.numberOfPlayers?.toString() || '0'}
 					className="w-full">
 					<TabsList className="grid w-full grid-cols-5 mb-4">
-						{playerCounts.map((count) => (
+						{playerCounts.map(({ numberOfPlayers }) => (
 							<TabsTrigger
-								key={count}
-								value={count.toString()}>
-								{count} <span className="hidden sm:inline ml-1">giocatori</span>
+								key={numberOfPlayers}
+								value={numberOfPlayers.toString()}>
+								{numberOfPlayers}{' '}
+								<span className="hidden sm:inline ml-1">giocatori</span>
 							</TabsTrigger>
 						))}
 					</TabsList>
