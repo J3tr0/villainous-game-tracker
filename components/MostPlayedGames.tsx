@@ -1,47 +1,50 @@
-import { games } from '@/data/games';
-import { formatPercentage, getPlayerCounts } from '@/lib/villainUtils';
+import { Badge } from '@/components/ui/badge';
+import { prisma } from '@/lib/db';
 import {
 	Table,
 	TableBody,
-	TableCaption,
 	TableCell,
 	TableHead,
 	TableHeader,
 	TableRow,
 } from './ui/table';
 
-export default function MostPlayedGames() {
-	const playerCounts = getPlayerCounts();
-	const totalGames = games.length;
+export default async function MostPlayedGames() {
+	// Ottieni il totale delle partite
+	const totalGames = await prisma.game.count();
 
-	// Calcola il numero di partite per ogni numero di giocatori
-	const playerCountStats = games.reduce((acc, game) => {
-		acc[game.numberOfPlayers] = (acc[game.numberOfPlayers] || 0) + 1;
-		return acc;
-	}, {} as Record<number, number>);
+	// Ottieni il conteggio delle partite per numero di giocatori
+	const gamesByPlayerCount = await prisma.game.groupBy({
+		by: ['numberOfPlayers'],
+		_count: {
+			id: true,
+		},
+		orderBy: {
+			_count: {
+				id: 'desc',
+			},
+		},
+	});
 
-	// Converti in array e ordina per numero di partite (decrescente)
-	const sortedStats = playerCounts
-		.map((count) => ({
-			players: count,
-			count: playerCountStats[count] || 0,
-			percentage: formatPercentage(
-				((playerCountStats[count] || 0) / totalGames) * 100
-			),
-		}))
-		.sort((a, b) => b.count - a.count);
+	// Calcola le statistiche
+	const stats = gamesByPlayerCount.map((stat) => ({
+		players: stat.numberOfPlayers,
+		count: stat._count.id,
+		percentage: ((stat._count.id / totalGames) * 100).toFixed(1),
+	}));
 
 	return (
 		<section>
-			<h2 className="text-2xl font-bold mb-4 uppercase">
-				<span className="bg-clip-text text-transparent bg-gradient-to-tl from-pink-500 to-indigo-800">
-					Statistiche partite
-				</span>
-			</h2>
+			<div className="flex items-center justify-between gap-2 mb-4">
+				<h2 className="text-2xl font-bold uppercase">
+					<span className="bg-clip-text text-transparent bg-gradient-to-tl from-pink-500 to-indigo-800">
+						Statistiche partite
+					</span>
+				</h2>
+				<Badge variant="secondary">{totalGames} partite</Badge>
+			</div>
+
 			<Table>
-				<TableCaption>
-					Distribuzione del numero di giocatori nelle partite.
-				</TableCaption>
 				<TableHeader>
 					<TableRow>
 						<TableHead className="text-xs uppercase">N. di giocatori</TableHead>
@@ -50,7 +53,7 @@ export default function MostPlayedGames() {
 					</TableRow>
 				</TableHeader>
 				<TableBody>
-					{sortedStats.map((stat) => (
+					{stats.map((stat) => (
 						<TableRow key={stat.players}>
 							<TableCell className="font-medium">
 								{stat.players} giocatori

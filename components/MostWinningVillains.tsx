@@ -1,5 +1,6 @@
 import { Avatar, AvatarImage } from '@/components/ui/avatar';
-import { getMostWinningVillains, getVillainImage } from '@/lib/villainUtils';
+import { villains } from '@/data/data';
+import { prisma } from '@/lib/db';
 import { ArrowRight } from 'lucide-react';
 import Link from 'next/link';
 import {
@@ -11,8 +12,40 @@ import {
 	TableRow,
 } from './ui/table';
 
-export default function MostWinningVillains() {
-	const villains = getMostWinningVillains(5);
+export default async function MostWinningVillains() {
+	const winners = await prisma.player.groupBy({
+		by: ['villainId'],
+		where: {
+			isWinner: true,
+		},
+		_count: {
+			villainId: true,
+		},
+		orderBy: {
+			_count: {
+				villainId: 'desc',
+			},
+		},
+		take: 5,
+	});
+
+	// Ottieni il totale delle partite per ogni villain
+	const totals = await Promise.all(
+		winners.map(async (winner) => {
+			const total = await prisma.player.count({
+				where: {
+					villainId: winner.villainId,
+				},
+			});
+			return {
+				id: winner.villainId,
+				wins: winner._count.villainId,
+				total,
+				winRate: ((winner._count.villainId / total) * 100).toFixed(1),
+				name: villains.find(v => v.id === winner.villainId)?.name,
+			};
+		})
+	);
 
 	return (
 		<section>
@@ -31,14 +64,14 @@ export default function MostWinningVillains() {
 					</TableRow>
 				</TableHeader>
 				<TableBody>
-					{villains.map((villain) => (
+					{totals.map((villain) => (
 						<TableRow key={villain.id}>
 							<TableCell className="font-medium">
 								<Link
 									href={`/stats/villains/${villain.id}`}
 									className="flex items-center gap-2 hover:text-primary transition-colors">
 									<Avatar className="size-8 rounded-sm">
-										<AvatarImage src={getVillainImage(villain.id)} />
+										<AvatarImage src={villains.find(v => v.id === villain.id)?.img} />
 									</Avatar>
 									<span className="truncate">{villain.name}</span>
 								</Link>

@@ -1,11 +1,15 @@
 import { Avatar, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { GameResult } from '@/lib/type';
+import { GameWithPlayers } from '@/lib/types';
 import { getVillainImage, getVillainName } from '@/lib/villainUtils';
 import Link from 'next/link';
 
-export function GameCard({ game }: { game: GameResult }) {
+interface GameCardProps {
+	game: GameWithPlayers;
+}
+
+export function GameCard({ game }: GameCardProps) {
 	return (
 		<Card className="rounded-sm">
 			<CardHeader className="py-2 bg-gradient-to-br from-zinc-200 to-zinc-50 dark:from-zinc-900 dark:to-zinc-800 rounded-t-sm">

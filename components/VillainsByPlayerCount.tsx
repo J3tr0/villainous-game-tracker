@@ -1,13 +1,7 @@
 import { Avatar, AvatarImage } from '@/components/ui/avatar';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import {
-	formatPercentage,
-	getPlayerCounts,
-	getVillainImage,
-	getVillainName,
-	getVillainStatsByPlayerCount,
-	sortVillainsByWins,
-} from '@/lib/villainUtils';
+import { villains } from '@/data/data';
+import { prisma } from '@/lib/db';
 import { ArrowRight } from 'lucide-react';
 import Link from 'next/link';
 import {
@@ -19,22 +13,63 @@ import {
 	TableRow,
 } from './ui/table';
 
-export default function VillainsByPlayerCount() {
-	const villainStatsByPlayerCount = getVillainStatsByPlayerCount();
-	const playerCounts = getPlayerCounts();
+export default async function VillainsByPlayerCount() {
+	// Ottieni tutti i numeri di giocatori disponibili
+	const playerCounts = await prisma.game
+		.groupBy({
+			by: ['numberOfPlayers'],
+			orderBy: {
+				numberOfPlayers: 'asc',
+			},
+		})
+		.then((counts) => counts.map((c) => c.numberOfPlayers));
 
-	const getTopVillainsForPlayerCount = (playerCount: number) => {
-		const stats = villainStatsByPlayerCount[playerCount] || {};
-		return sortVillainsByWins(
-			Object.entries(stats).map(([id, { wins, total }]) => ({
-				id,
-				name: getVillainName(id),
-				wins,
-				total,
-				winRate: total > 0 ? formatPercentage((wins / total) * 100) : '0.0',
-			}))
-		).slice(0, 5);
+	// Funzione per ottenere le statistiche per un numero specifico di giocatori
+	const getTopVillainsForPlayerCount = async (playerCount: number) => {
+		const villainStats = await prisma.player.groupBy({
+			by: ['villainId'],
+			where: {
+				game: {
+					numberOfPlayers: playerCount,
+				},
+			},
+			_count: {
+				villainId: true,
+			},
+		});
+
+		const statsWithWins = await Promise.all(
+			villainStats.map(async (stat) => {
+				const wins = await prisma.player.count({
+					where: {
+						villainId: stat.villainId,
+						isWinner: true,
+						game: {
+							numberOfPlayers: playerCount,
+						},
+					},
+				});
+
+				return {
+					id: stat.villainId,
+					name: villains.find((v) => v.id === stat.villainId)?.name,
+					wins,
+					total: stat._count.villainId,
+					winRate: ((wins / stat._count.villainId) * 100).toFixed(1),
+				};
+			})
+		);
+
+		return statsWithWins.sort((a, b) => b.wins - a.wins).slice(0, 5);
 	};
+
+	// Ottieni le statistiche per ogni numero di giocatori
+	const statsByPlayerCount = await Promise.all(
+		playerCounts.map(async (count) => ({
+			count,
+			stats: await getTopVillainsForPlayerCount(count),
+		}))
+	);
 
 	return (
 		<section>
@@ -56,7 +91,7 @@ export default function VillainsByPlayerCount() {
 					))}
 				</TabsList>
 
-				{playerCounts.map((count) => (
+				{statsByPlayerCount.map(({ count, stats }) => (
 					<TabsContent
 						key={count}
 						value={count.toString()}>
@@ -70,14 +105,16 @@ export default function VillainsByPlayerCount() {
 								</TableRow>
 							</TableHeader>
 							<TableBody>
-								{getTopVillainsForPlayerCount(count).map((villain) => (
+								{stats.map((villain) => (
 									<TableRow key={villain.id}>
 										<TableCell className="font-medium">
 											<Link
 												href={`/stats/villains/${villain.id}`}
 												className="flex items-center gap-2 hover:text-primary transition-colors">
 												<Avatar className="size-8 rounded-sm">
-													<AvatarImage src={getVillainImage(villain.id)} />
+													<AvatarImage
+														src={villains.find((v) => v.id === villain.id)?.img}
+													/>
 												</Avatar>
 												<span className="truncate">{villain.name}</span>
 											</Link>

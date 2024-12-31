@@ -1,19 +1,42 @@
 import { Avatar, AvatarImage } from '@/components/ui/avatar';
-import { getMostUsedVillains, getVillainImage } from '@/lib/villainUtils';
+import { villains } from '@/data/data';
+import { prisma } from '@/lib/db';
 import { ArrowRight } from 'lucide-react';
 import Link from 'next/link';
 import {
 	Table,
 	TableBody,
-	TableCaption,
 	TableCell,
 	TableHead,
 	TableHeader,
 	TableRow,
 } from './ui/table';
 
-export default function MostUsedVillains() {
-	const villains = getMostUsedVillains(5);
+export default async function MostUsedVillains() {
+	// Ottieni il totale delle partite
+	const totalGames = await prisma.player.count();
+
+	// Ottieni i villain più usati
+	const mostUsed = await prisma.player.groupBy({
+		by: ['villainId'],
+		_count: {
+			villainId: true,
+		},
+		orderBy: {
+			_count: {
+				villainId: 'desc',
+			},
+		},
+		take: 5,
+	});
+
+	// Calcola le statistiche
+	const villainStats = mostUsed.map((villain) => ({
+		id: villain.villainId,
+		name: villains.find((v) => v.id === villain.villainId)?.name,
+		count: villain._count.villainId,
+		percentage: ((villain._count.villainId / totalGames) * 100).toFixed(1),
+	}));
 
 	return (
 		<section>
@@ -23,7 +46,6 @@ export default function MostUsedVillains() {
 				</span>
 			</h2>
 			<Table>
-				<TableCaption>I Villain più usati nelle partite.</TableCaption>
 				<TableHeader>
 					<TableRow>
 						<TableHead className="w-[50%]">Villain</TableHead>
@@ -32,14 +54,16 @@ export default function MostUsedVillains() {
 					</TableRow>
 				</TableHeader>
 				<TableBody>
-					{villains.map((villain) => (
+					{villainStats.map((villain) => (
 						<TableRow key={villain.id}>
 							<TableCell className="font-medium">
 								<Link
 									href={`/stats/villains/${villain.id}`}
 									className="flex items-center gap-2 hover:text-primary transition-colors">
 									<Avatar className="size-8 rounded-sm">
-										<AvatarImage src={getVillainImage(villain.id)} />
+										<AvatarImage
+											src={villains.find((v) => v.id === villain.id)?.img}
+										/>
 									</Avatar>
 									<span className="truncate">{villain.name}</span>
 								</Link>

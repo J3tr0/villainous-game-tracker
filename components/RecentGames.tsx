@@ -1,8 +1,12 @@
 'use client';
 
 import { GameCard } from '@/components/GameCard';
-import { games } from '@/data/games';
+import { GameWithPlayers } from '@/lib/types';
 import { useEffect, useState } from 'react';
+
+interface RecentGamesProps {
+	games: GameWithPlayers[];
+}
 
 function useScreenSize() {
 	const [gamesCount, setGamesCount] = useState(6);
@@ -33,7 +37,7 @@ function useScreenSize() {
 	return gamesCount;
 }
 
-export function RecentGames() {
+export function RecentGames({ games }: RecentGamesProps) {
 	const gamesCount = useScreenSize();
 
 	// Prendiamo le ultime N partite in base alla dimensione dello schermo
