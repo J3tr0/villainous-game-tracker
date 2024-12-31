@@ -20,69 +20,61 @@ export default async function VillainStatsPage({
 	params: { id: string };
 }) {
 	const { id } = await params;
-	const villain = villains.find((v) => v.id === id);
 
+	const villain = villains.find((v) => v.id === id);
 	if (!villain) {
 		notFound();
 	}
 
-	// Statistiche generali
-	const totalGames = await prisma.player.count({
-		where: { villainId: id },
-	});
-
-	const wins = await prisma.player.count({
+	const gamesData = await prisma.player.findMany({
 		where: {
 			villainId: id,
+		},
+		select: {
 			isWinner: true,
-		},
-	});
-
-	const lastGame = await prisma.game.findFirst({
-		where: {
-			players: {
-				some: { villainId: id },
-			},
-		},
-		orderBy: { date: 'desc' },
-	});
-
-	// Statistiche per numero di giocatori
-	const gamesByPlayerCount = await prisma.game.groupBy({
-		by: ['numberOfPlayers'],
-		where: {
-			players: {
-				some: { villainId: id },
-			},
-		},
-		_count: {
-			id: true,
-		},
-		orderBy: {
-			numberOfPlayers: 'asc',
-		},
-	});
-
-	const statsByPlayerCount = await Promise.all(
-		gamesByPlayerCount.map(async (stat) => {
-			const wins = await prisma.player.count({
-				where: {
-					villainId: id,
-					isWinner: true,
-					game: {
-						numberOfPlayers: stat.numberOfPlayers,
+			game: {
+				select: {
+					date: true,
+					numberOfPlayers: true,
+					players: {
+						select: {
+							villainId: true,
+							isWinner: true,
+						},
 					},
 				},
-			});
+			},
+		},
+		orderBy: {
+			game: {
+				date: 'desc',
+			},
+		},
+	});
 
+	// Calcolo statistiche base
+	const totalGames = gamesData.length;
+	const wins = gamesData.filter((game) => game.isWinner).length;
+	const lastGame = gamesData[0]?.game;
+
+	// Calcolo statistiche per numero di giocatori
+	const statsByPlayerCount = Array.from(
+		new Set(gamesData.map((g) => g.game.numberOfPlayers))
+	)
+		.sort((a, b) => a - b)
+		.map((playerCount) => {
+			const gamesWithCount = gamesData.filter(
+				(g) => g.game.numberOfPlayers === playerCount
+			);
+			const total = gamesWithCount.length;
+			const wins = gamesWithCount.filter((g) => g.isWinner).length;
 			return {
-				playerCount: stat.numberOfPlayers,
-				total: stat._count.id,
+				playerCount,
+				total,
 				wins,
-				winRate: ((wins / stat._count.id) * 100).toFixed(1),
+				winRate: total > 0 ? ((wins / total) * 100).toFixed(1) : '0.0',
 			};
-		})
-	);
+		});
 
 	return (
 		<div className="flex flex-col min-h-screen mt-8">
