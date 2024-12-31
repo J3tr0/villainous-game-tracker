@@ -2,6 +2,27 @@ import { prisma } from '@/lib/db';
 import { gameSchema } from '@/lib/validations/game';
 import { NextResponse } from 'next/server';
 
+export async function GET() {
+	try {
+		const games = await prisma.game.findMany({
+			include: {
+				players: true,
+			},
+			orderBy: {
+				date: 'desc',
+			},
+		});
+
+		return NextResponse.json(games);
+	} catch (error) {
+		console.error('API error:', error);
+		return NextResponse.json(
+			{ error: 'Errore nel recupero delle partite' },
+			{ status: 500 }
+		);
+	}
+}
+
 export async function POST(req: Request) {
 	try {
 		const body = await req.json();
