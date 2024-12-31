@@ -29,7 +29,15 @@ function useScreenSize() {
 	return gamesCount;
 }
 
-const fetcher = (url: string) => fetch(url).then((res) => res.json());
+const fetcher = async (url: string) => {
+	const res = await fetch(url);
+	const data = await res.json();
+	// Converti le stringhe date in oggetti Date
+	return data.map((game: { date: string } & Omit<GameWithPlayers, 'date'>) => ({
+		...game,
+		date: new Date(game.date),
+	}));
+};
 
 export function RecentGames({
 	games: initialGames,
@@ -39,12 +47,11 @@ export function RecentGames({
 	const gamesCount = useScreenSize();
 
 	const { data: games } = useSWR<GameWithPlayers[]>('/api/games', fetcher, {
-		fallbackData: initialGames,
 		refreshInterval: 5000, // Aggiorna ogni 5 secondi
 	});
 
 	const sortedGames =
-		games
+		(games || initialGames)
 			?.sort((a, b) => b.date.getTime() - a.date.getTime())
 			.slice(0, gamesCount) ?? [];
 
