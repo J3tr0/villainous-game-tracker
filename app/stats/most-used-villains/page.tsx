@@ -1,3 +1,5 @@
+'use client';
+
 import { Avatar, AvatarImage } from '@/components/ui/avatar';
 import {
 	Table,
@@ -8,11 +10,32 @@ import {
 	TableHeader,
 	TableRow,
 } from '@/components/ui/table';
-import { getMostUsedVillains, getVillainImage } from '@/lib/villainUtils';
+import { VillainUsageStats } from '@/lib/types';
+import { getVillainImage } from '@/lib/villainUtils';
 import Link from 'next/link';
+import useSWR from 'swr';
 
-export default async function MostUsedVillainsPage() {
-	const villains = await getMostUsedVillains();
+const fetcher = async () => {
+	const res = await fetch('/api/villains/most-used');
+	const data = await res.json();
+	if (data.error) throw new Error(data.error);
+	return data;
+};
+
+export default function MostUsedVillainsPage() {
+	const { data: villains, error } = useSWR<VillainUsageStats[]>(
+		'most-used-villains',
+		fetcher,
+		{
+			refreshInterval: 5000,
+		}
+	);
+
+	if (error)
+		return (
+			<p className="text-muted-foreground">Errore nel caricamento dei dati</p>
+		);
+	if (!villains) return <p className="text-muted-foreground">Caricamento...</p>;
 
 	return (
 		<div className="flex flex-col min-h-screen mt-8">
@@ -50,8 +73,10 @@ export default async function MostUsedVillainsPage() {
 										{villain.name}
 									</Link>
 								</TableCell>
-								<TableCell className="text-center">{villain.total}</TableCell>
-								<TableCell className="text-center">{villain.winRate}</TableCell>
+								<TableCell className="text-center">{villain.count}</TableCell>
+								<TableCell className="text-center">
+									{villain.percentage}%
+								</TableCell>
 							</TableRow>
 						))}
 					</TableBody>

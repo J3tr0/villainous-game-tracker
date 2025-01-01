@@ -38,3 +38,21 @@ export type GamesByPlayerCount = {
 	wins: number;
 	winRate: string;
 }[];
+
+export type VillainUsageStats = {
+	id: string;
+	name: string;
+	count: number;
+	percentage: string;
+};
+
+export type VillainStatsByPlayerCount = {
+	count: number;
+	stats: {
+		id: string;
+		name: string;
+		total: number;
+		wins: number;
+		winRate: string;
+	}[];
+}[];

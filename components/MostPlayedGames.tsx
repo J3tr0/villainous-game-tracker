@@ -1,5 +1,7 @@
+'use client';
+
 import { Badge } from '@/components/ui/badge';
-import { prisma } from '@/lib/db';
+import useSWR from 'swr';
 import {
 	Table,
 	TableBody,
@@ -9,85 +11,30 @@ import {
 	TableRow,
 } from './ui/table';
 
-export default async function MostPlayedGames() {
-	try {
-		// Ottieni il totale delle partite
-		const totalGames = await prisma.game.count();
+type GameStats = {
+	players: number;
+	count: number;
+	percentage: string;
+	totalGames: number;
+};
 
-		// Se non ci sono partite, mostra un messaggio
-		if (!totalGames) {
-			return (
-				<section>
-					<h2 className="text-2xl font-bold uppercase mb-4">
-						<span className="bg-clip-text text-transparent bg-gradient-to-tl from-pink-500 to-indigo-800">
-							Statistiche partite
-						</span>
-					</h2>
-					<p className="text-muted-foreground">Nessuna partita disponibile</p>
-				</section>
-			);
+const fetcher = async () => {
+	const res = await fetch('/api/games/most-played');
+	const data = await res.json();
+	if (data.error) throw new Error(data.error);
+	return data;
+};
+
+export default function MostPlayedGames() {
+	const { data: stats, error } = useSWR<GameStats[]>(
+		'most-played-games',
+		fetcher,
+		{
+			refreshInterval: 5000,
 		}
+	);
 
-		// Ottieni il conteggio delle partite per numero di giocatori
-		const gamesByPlayerCount =
-			(await prisma.game.groupBy({
-				by: ['numberOfPlayers'],
-				_count: {
-					id: true,
-				},
-				orderBy: {
-					_count: {
-						id: 'desc',
-					},
-				},
-			})) || [];
-
-		// Calcola le statistiche
-		const stats = gamesByPlayerCount.map((stat) => ({
-			players: stat.numberOfPlayers,
-			count: stat._count.id,
-			percentage: ((stat._count.id / totalGames) * 100).toFixed(1),
-		}));
-
-		return (
-			<section>
-				<div className="flex items-center justify-between gap-2 mb-4">
-					<h2 className="text-2xl font-bold uppercase">
-						<span className="bg-clip-text text-transparent bg-gradient-to-tl from-pink-500 to-indigo-800">
-							Statistiche partite
-						</span>
-					</h2>
-					<Badge variant="secondary">{totalGames} partite</Badge>
-				</div>
-
-				<Table>
-					<TableHeader>
-						<TableRow>
-							<TableHead className="text-xs uppercase">
-								N. di giocatori
-							</TableHead>
-							<TableHead className="text-xs uppercase text-center">#</TableHead>
-							<TableHead className="text-xs uppercase text-center">%</TableHead>
-						</TableRow>
-					</TableHeader>
-					<TableBody>
-						{stats.map((stat) => (
-							<TableRow key={stat.players}>
-								<TableCell className="font-medium">
-									{stat.players} giocatori
-								</TableCell>
-								<TableCell className="text-center">{stat.count}</TableCell>
-								<TableCell className="text-center">
-									{stat.percentage}%
-								</TableCell>
-							</TableRow>
-						))}
-					</TableBody>
-				</Table>
-			</section>
-		);
-	} catch (error) {
-		console.error('Error in MostPlayedGames:', error);
+	if (error) {
 		return (
 			<section>
 				<h2 className="text-2xl font-bold uppercase mb-4">
@@ -99,4 +46,64 @@ export default async function MostPlayedGames() {
 			</section>
 		);
 	}
+
+	if (!stats) {
+		return (
+			<section>
+				<h2 className="text-2xl font-bold uppercase mb-4">
+					<span className="bg-clip-text text-transparent bg-gradient-to-tl from-pink-500 to-indigo-800">
+						Statistiche partite
+					</span>
+				</h2>
+				<p className="text-muted-foreground">Caricamento...</p>
+			</section>
+		);
+	}
+
+	if (!stats.length) {
+		return (
+			<section>
+				<h2 className="text-2xl font-bold uppercase mb-4">
+					<span className="bg-clip-text text-transparent bg-gradient-to-tl from-pink-500 to-indigo-800">
+						Statistiche partite
+					</span>
+				</h2>
+				<p className="text-muted-foreground">Nessuna partita disponibile</p>
+			</section>
+		);
+	}
+
+	return (
+		<section>
+			<div className="flex items-center justify-between gap-2 mb-4">
+				<h2 className="text-2xl font-bold uppercase">
+					<span className="bg-clip-text text-transparent bg-gradient-to-tl from-pink-500 to-indigo-800">
+						Statistiche partite
+					</span>
+				</h2>
+				<Badge variant="secondary">{stats[0].totalGames} partite</Badge>
+			</div>
+
+			<Table>
+				<TableHeader>
+					<TableRow>
+						<TableHead className="text-xs uppercase">N. di giocatori</TableHead>
+						<TableHead className="text-xs uppercase text-center">#</TableHead>
+						<TableHead className="text-xs uppercase text-center">%</TableHead>
+					</TableRow>
+				</TableHeader>
+				<TableBody>
+					{stats.map((stat) => (
+						<TableRow key={stat.players}>
+							<TableCell className="font-medium">
+								{stat.players} giocatori
+							</TableCell>
+							<TableCell className="text-center">{stat.count}</TableCell>
+							<TableCell className="text-center">{stat.percentage}%</TableCell>
+						</TableRow>
+					))}
+				</TableBody>
+			</Table>
+		</section>
+	);
 }

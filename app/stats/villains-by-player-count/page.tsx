@@ -1,4 +1,5 @@
-import { Avatar, AvatarImage } from '@/components/ui/avatar';
+'use client';
+
 import {
 	Table,
 	TableBody,
@@ -8,41 +9,32 @@ import {
 	TableRow,
 } from '@/components/ui/table';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { villains } from '@/data/data';
-import {
-	getPlayerCounts,
-	getVillainImage,
-	getVillainName,
-	getVillainStatsByPlayerCount,
-} from '@/lib/villainUtils';
-import Link from 'next/link';
+import { VillainLink } from '@/components/VillainLink';
+import { VillainStatsByPlayerCount } from '@/lib/types';
+import useSWR from 'swr';
 
-export default async function VillainsByPlayerCountPage() {
-	const playerCounts = await getPlayerCounts();
-	const villainStats = await Promise.all(
-		villains.map(async (villain) => ({
-			id: villain.id,
-			stats: await getVillainStatsByPlayerCount(villain.id),
-		}))
+const fetcher = async () => {
+	const res = await fetch('/api/villains/by-player-count');
+	const data = await res.json();
+	if (data.error) throw new Error(data.error);
+	return data;
+};
+
+export default function VillainsByPlayerCountPage() {
+	const { data: statsByPlayerCount, error } = useSWR<VillainStatsByPlayerCount>(
+		'villains-by-player-count',
+		fetcher,
+		{
+			refreshInterval: 5000,
+		}
 	);
 
-	// Funzione per ottenere tutti i villain per un dato numero di giocatori
-	const getVillainsForPlayerCount = (playerCount: number) => {
-		return villainStats
-			.map(({ id, stats }) => {
-				const [, total, wins] = stats.find(
-					([players]) => players === playerCount
-				) || [0, 0, 0];
-				return {
-					id,
-					name: getVillainName(id),
-					wins,
-					total,
-					winRate: total > 0 ? ((wins / total) * 100).toFixed(1) + '%' : '0.0%',
-				};
-			})
-			.sort((a, b) => parseFloat(b.winRate) - parseFloat(a.winRate));
-	};
+	if (error)
+		return (
+			<p className="text-muted-foreground">Errore nel caricamento dei dati</p>
+		);
+	if (!statsByPlayerCount)
+		return <p className="text-muted-foreground">Caricamento...</p>;
 
 	return (
 		<div className="flex flex-col min-h-screen mt-8">
@@ -52,27 +44,25 @@ export default async function VillainsByPlayerCountPage() {
 						Statistiche complete per numero di giocatori
 					</span>
 				</h1>
-				<Tabs
-					defaultValue={playerCounts[0].toString()}
-					className="w-full">
-					<TabsList className="grid w-full grid-cols-5 mb-4">
-						{playerCounts.map((count) => (
+				<Tabs defaultValue={statsByPlayerCount[0]?.count?.toString()}>
+					<TabsList className="grid w-full grid-cols-5 mb-4 rounded-sm">
+						{statsByPlayerCount.map(({ count }) => (
 							<TabsTrigger
 								key={count}
-								value={count.toString()}>
+								value={count.toString()}
+								className="rounded-sm">
 								{count} <span className="hidden sm:inline ml-1">giocatori</span>
 							</TabsTrigger>
 						))}
 					</TabsList>
 
-					{playerCounts.map((count) => (
+					{statsByPlayerCount.map(({ count, stats }) => (
 						<TabsContent
 							key={count}
 							value={count.toString()}>
 							<Table>
 								<TableHeader>
 									<TableRow>
-										<TableHead>Posizione</TableHead>
 										<TableHead>Villain</TableHead>
 										<TableHead className="text-center">Vittorie</TableHead>
 										<TableHead className="text-center">Partite</TableHead>
@@ -80,20 +70,13 @@ export default async function VillainsByPlayerCountPage() {
 									</TableRow>
 								</TableHeader>
 								<TableBody>
-									{getVillainsForPlayerCount(count).map((villain, index) => (
+									{stats.map((villain) => (
 										<TableRow key={villain.id}>
 											<TableCell className="font-medium">
-												#{index + 1}
-											</TableCell>
-											<TableCell className="font-medium">
-												<Link
-													href={`/stats/villains/${villain.id}`}
-													className="flex items-center gap-2 hover:text-primary transition-colors">
-													<Avatar className="size-8 rounded-sm">
-														<AvatarImage src={getVillainImage(villain.id)} />
-													</Avatar>
-													{villain.name}
-												</Link>
+												<VillainLink
+													villainId={villain.id}
+													className="flex items-center gap-2 hover:text-primary transition-colors"
+												/>
 											</TableCell>
 											<TableCell className="text-center">
 												{villain.wins}
@@ -102,7 +85,7 @@ export default async function VillainsByPlayerCountPage() {
 												{villain.total}
 											</TableCell>
 											<TableCell className="text-center">
-												{villain.winRate}
+												{villain.winRate}%
 											</TableCell>
 										</TableRow>
 									))}
