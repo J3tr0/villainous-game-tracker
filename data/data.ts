@@ -39,6 +39,6 @@ export const villains: Villain[] = [
 	},
 	{ id: 'gothel', name: 'Madre Gothel', img: '/villains/Mother_Gothel.webp' },
 	{ id: 'candito', name: 'Re Candito', img: '/villains/King_Candy.webp' },
-	{ id: 'sherkhan', name: 'Sher Khan', img: '/villains/Shere_Khan.webp' },
+	{ id: 'sherkhan', name: 'Shere Khan', img: '/villains/Shere_Khan.webp' },
 	{ id: 'baubau', name: 'Bau Bau', img: '/villains/Oogie_Boogie.webp' },
 ];
