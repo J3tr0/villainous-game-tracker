@@ -1,8 +1,16 @@
 import { Villain } from '@/lib/types';
 
 export const villains: Villain[] = [
-	{ id: 'malefica', name: 'Malefica', img: '/villains/Maleficent.webp' },
-	{ id: 'ursula', name: 'Ursula', img: '/villains/Ursula.webp' },
+	{
+		id: 'malefica',
+		name: 'Malefica',
+		img: '/villains/Maleficent.webp',
+	},
+	{
+		id: 'ursula',
+		name: 'Ursula',
+		img: '/villains/Ursula.webp',
+	},
 	{
 		id: 'uncino',
 		name: 'Capitan Uncino',

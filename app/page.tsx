@@ -1,55 +1,29 @@
+'use client';
+
 import GameStats from '@/components/GameStats';
 import { RecentGames } from '@/components/RecentGames';
-import { prisma } from '@/lib/db';
 import { GameWithPlayers } from '@/lib/types';
+import useSWR from 'swr';
 
-export default async function Home() {
-	try {
-		const games = await prisma.game.findMany({
-			include: {
-				players: true,
-			},
-			orderBy: {
-				date: 'desc',
-			},
-		});
+const fetcher = async () => {
+	const res = await fetch('/api/games/sheet');
+	const data = await res.json();
+	if (data.error) throw new Error(data.error);
+	return data;
+};
 
-		// Se non ci sono partite, restituisci subito la UI vuota
-		if (!games || games.length === 0) {
-			return (
-				<div className="flex flex-col min-h-screen">
-					<main className="flex-grow p-4">
-						<GameStats />
-						<RecentGames games={[]} />
-					</main>
-				</div>
-			);
-		}
+export default function Home() {
+	const { data: games, error } = useSWR<GameWithPlayers[]>('games', fetcher);
 
-		// Procedi con la validazione solo se ci sono partite
-		const validGames = games.map((game) => ({
-			...game,
-			date: game.date instanceof Date ? game.date : new Date(game.date),
-			players: game.players || [],
-		})) as GameWithPlayers[];
+	if (error) return <div>Errore nel caricamento dei dati</div>;
+	if (!games) return <div>Caricamento...</div>;
 
-		return (
-			<div className="flex flex-col min-h-screen">
-				<main className="flex-grow p-4">
-					<GameStats />
-					<RecentGames games={validGames} />
-				</main>
-			</div>
-		);
-	} catch (error) {
-		console.error('Error fetching games:', error);
-		return (
-			<div className="flex flex-col min-h-screen">
-				<main className="flex-grow p-4">
-					<GameStats />
-					<RecentGames games={[]} />
-				</main>
-			</div>
-		);
-	}
+	return (
+		<div className="flex flex-col min-h-screen">
+			<main className="flex-grow p-4">
+				<GameStats />
+				<RecentGames />
+			</main>
+		</div>
+	);
 }

@@ -1,10 +1,9 @@
-import { Game as PrismaGame, Player as PrismaPlayer } from '@prisma/client';
-
-export interface Villain {
+export type Villain = {
 	id: string;
+	idGoogle?: string;
 	name: string;
-	img?: string;
-}
+	img: string;
+};
 
 export interface GameResult {
 	id?: string;
@@ -18,9 +17,15 @@ export interface GameResult {
 	name?: string;
 }
 
-export type GameWithPlayers = PrismaGame & {
-	players: PrismaPlayer[];
-	createdBy: string | null;
+export type GameWithPlayers = {
+	id: string;
+	numberOfPlayers: number;
+	date: string;
+	players: {
+		villainId: string;
+		isWinner: boolean;
+	}[];
+	createdBy?: string | null;
 };
 
 export type VillainStats = {

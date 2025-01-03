@@ -2,6 +2,10 @@ import { villains } from '@/data/data';
 import { prisma } from '@/lib/db';
 import { VillainStats } from '@/lib/types';
 
+export function getVillainID(name: string): string {
+	return villains.find((v) => v.name === name)?.id ?? name;
+}
+
 export function getVillainName(id: string): string {
 	return villains.find((v) => v.id === id)?.name ?? id;
 }

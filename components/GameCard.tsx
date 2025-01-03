@@ -1,5 +1,8 @@
+'use client';
+
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { formatDate } from '@/lib/dateUtils';
 import { GameWithPlayers } from '@/lib/types';
 import { GameVillainLink } from './GameVillainLink';
 
@@ -18,11 +21,7 @@ export function GameCard({ game }: GameCardProps) {
 					<Badge
 						variant="secondary"
 						className="rounded-sm bg-zinc-50 dark:bg-zinc-900 uppercase">
-						{new Date(game.date).toLocaleDateString('it-IT', {
-							day: 'numeric',
-							month: 'short',
-							year: 'numeric',
-						})}
+						{formatDate(game.date)}
 					</Badge>
 				</div>
 			</CardHeader>

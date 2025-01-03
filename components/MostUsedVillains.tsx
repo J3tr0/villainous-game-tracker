@@ -1,7 +1,7 @@
 'use client';
 
 import { VillainLink } from '@/components/VillainLink';
-import { VillainUsageStats } from '@/lib/types';
+import { GameResult } from '@/lib/types';
 import { ArrowRight } from 'lucide-react';
 import Link from 'next/link';
 import useSWR from 'swr';
@@ -15,27 +15,54 @@ import {
 } from './ui/table';
 
 const fetcher = async () => {
-	const res = await fetch('/api/villains/most-used/top');
+	const res = await fetch('/api/games/sheet');
 	const data = await res.json();
 	if (data.error) throw new Error(data.error);
-	return data;
+
+	// Calcola le statistiche dei villain
+	const villainStats = data.reduce(
+		(acc: Record<string, number>, game: GameResult) => {
+			game.players.forEach(
+				(player: { villainId: string; isWinner: boolean }) => {
+					if (player.villainId) {
+						acc[player.villainId] = (acc[player.villainId] || 0) + 1;
+					}
+				}
+			);
+			return acc;
+		},
+		{}
+	);
+
+	// Converti in array e calcola le percentuali
+	const values: number[] = Object.values(villainStats);
+	const totalGames = values.reduce((a, b) => a + b, 0);
+	const statsArray = Object.entries(villainStats as Record<string, number>).map(
+		([id, count]) => ({
+			id,
+			count,
+			percentage: Math.round((count / totalGames) * 100),
+		})
+	);
+
+	// Ordina per conteggio decrescente
+	return statsArray.sort((a, b) => b.count - a.count);
 };
 
 export default function MostUsedVillains() {
-	const { data: villainStats, error } = useSWR(
-		'most-used-villains-top',
-		fetcher,
-		{
-			refreshInterval: 5000,
-		}
-	);
+	const { data: villainStats, error } = useSWR('most-used-villains', fetcher, {
+		refreshInterval: 5000,
+	});
 
-	if (error)
+	if (error) {
 		return (
 			<p className="text-muted-foreground">Errore nel caricamento dei dati</p>
 		);
-	if (!villainStats)
+	}
+
+	if (!villainStats) {
 		return <p className="text-muted-foreground">Caricamento...</p>;
+	}
 
 	return (
 		<section>
@@ -53,7 +80,7 @@ export default function MostUsedVillains() {
 					</TableRow>
 				</TableHeader>
 				<TableBody>
-					{villainStats.map((villain: VillainUsageStats) => (
+					{villainStats.slice(0, 5).map((villain) => (
 						<TableRow
 							key={villain.id}
 							className="hover:bg-gradient-to-tl hover:from-pink-500/25 hover:to-indigo-800/25">

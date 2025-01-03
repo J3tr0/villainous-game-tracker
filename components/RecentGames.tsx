@@ -4,56 +4,36 @@ import { GameCard } from '@/components/GameCard';
 import { Button } from '@/components/ui/button';
 import { GameWithPlayers } from '@/lib/types';
 import Link from 'next/link';
-import { useEffect, useState } from 'react';
 import useSWR from 'swr';
 
-function useScreenSize() {
-	const [gamesCount, setGamesCount] = useState(6);
-
-	useEffect(() => {
-		function handleResize() {
-			if (window.innerWidth >= 1280) {
-				setGamesCount(10);
-			} else if (window.innerWidth >= 1024) {
-				setGamesCount(8);
-			} else {
-				setGamesCount(6);
-			}
-		}
-
-		handleResize();
-		window.addEventListener('resize', handleResize);
-		return () => window.removeEventListener('resize', handleResize);
-	}, []);
-
-	return gamesCount;
-}
-
-const fetcher = async (url: string) => {
-	const res = await fetch(url);
+const fetcher = async () => {
+	const res = await fetch('/api/games/sheet');
 	const data = await res.json();
-	// Converti le stringhe date in oggetti Date
-	return data.map((game: { date: string } & Omit<GameWithPlayers, 'date'>) => ({
-		...game,
-		date: new Date(game.date),
-	}));
+	if (data.error) throw new Error(data.error);
+	return data;
 };
 
-export function RecentGames({
-	games: initialGames,
-}: {
-	games: GameWithPlayers[];
-}) {
-	const gamesCount = useScreenSize();
+export function RecentGames() {
+	const { data: games, error } = useSWR<GameWithPlayers[]>(
+		'/api/games/sheet',
+		fetcher,
+		{
+			refreshInterval: 5000, // Aggiorna ogni 5 secondi
+		}
+	);
 
-	const { data: games } = useSWR<GameWithPlayers[]>('/api/games', fetcher, {
-		refreshInterval: 5000, // Aggiorna ogni 5 secondi
-	});
-
-	const sortedGames =
-		(games || initialGames)
-			?.sort((a, b) => b.date.getTime() - a.date.getTime())
-			.slice(0, gamesCount) ?? [];
+	if (error) {
+		return (
+			<section className="mt-8">
+				<h2 className="text-2xl font-bold mb-4 uppercase">
+					<span className="bg-clip-text text-transparent bg-gradient-to-tl from-pink-500 to-indigo-800">
+						Ultime partite inserite
+					</span>
+				</h2>
+				<p className="text-muted-foreground">Errore nel caricamento dei dati</p>
+			</section>
+		);
+	}
 
 	if (!games || games.length === 0) {
 		return (
@@ -67,6 +47,10 @@ export function RecentGames({
 			</section>
 		);
 	}
+
+	const sortedGames = [...games]
+		.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+		.slice(0, 5);
 
 	return (
 		<section className="mt-8">
