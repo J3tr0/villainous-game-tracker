@@ -13,7 +13,7 @@ const fetcher = async () => {
 
 export default function GamesPage() {
 	const { data: games, error } = useSWR<GameWithPlayers[]>('games', fetcher, {
-		refreshInterval: 5000, // Aggiorna ogni 5 secondi
+		refreshInterval: 30000,
 	});
 
 	if (error) {

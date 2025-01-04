@@ -60,7 +60,7 @@ export default function MostWinningVillains() {
 		'most-winning-villains',
 		fetcher,
 		{
-			refreshInterval: 5000,
+			refreshInterval: 30000,
 		}
 	);
 

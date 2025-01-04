@@ -63,7 +63,7 @@ const fetcher = async () => {
 
 export default function MostWinningVillainsPage() {
 	const { data: villains, error } = useSWR('most-winning-villains', fetcher, {
-		refreshInterval: 5000,
+		refreshInterval: 30000,
 	});
 
 	if (error)

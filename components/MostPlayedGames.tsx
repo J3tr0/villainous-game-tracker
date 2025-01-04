@@ -27,10 +27,9 @@ const fetcher = async () => {
 		{}
 	);
 
-	const totalGames = Object.values(gamesByPlayerCount as Record<string, number>).reduce(
-		(a, b) => a + b,
-		0
-	);
+	const totalGames = Object.values(
+		gamesByPlayerCount as Record<string, number>
+	).reduce((a, b) => a + b, 0);
 
 	// Converti in array e calcola le percentuali
 	return Object.entries(gamesByPlayerCount as Record<string, number>)
@@ -45,7 +44,7 @@ const fetcher = async () => {
 
 export default function MostPlayedGames() {
 	const { data: stats, error } = useSWR('most-played-games', fetcher, {
-		refreshInterval: 5000,
+		refreshInterval: 30000,
 	});
 
 	if (error) {

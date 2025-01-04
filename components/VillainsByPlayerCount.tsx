@@ -77,7 +77,7 @@ export default function VillainsByPlayerCount() {
 		'villains-by-player-count-top',
 		fetcher,
 		{
-			refreshInterval: 5000,
+			refreshInterval: 30000,
 		}
 	);
 

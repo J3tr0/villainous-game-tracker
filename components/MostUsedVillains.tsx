@@ -49,7 +49,7 @@ const fetcher = async () => {
 
 export default function MostUsedVillains() {
 	const { data: villainStats, error } = useSWR('most-used-villains', fetcher, {
-		refreshInterval: 5000,
+		refreshInterval: 30000,
 	});
 
 	if (error) {

@@ -18,7 +18,7 @@ export function RecentGames() {
 		'/api/games/sheet',
 		fetcher,
 		{
-			refreshInterval: 5000, // Aggiorna ogni 5 secondi
+			refreshInterval: 30000,
 		}
 	);
 
