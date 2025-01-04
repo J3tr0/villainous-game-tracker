@@ -2,7 +2,7 @@
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { VillainLink } from '@/components/VillainLink';
-import { VillainStatsByPlayerCount } from '@/lib/types';
+import { GameWithPlayers } from '@/lib/types';
 import { ArrowRight } from 'lucide-react';
 import Link from 'next/link';
 import useSWR from 'swr';
@@ -16,14 +16,64 @@ import {
 } from './ui/table';
 
 const fetcher = async () => {
-	const res = await fetch('/api/villains/by-player-count/top');
+	const res = await fetch('/api/games/sheet');
 	const data = await res.json();
 	if (data.error) throw new Error(data.error);
-	return data;
+
+	// Raggruppa le partite per numero di giocatori
+	const gamesByPlayerCount = data.reduce(
+		(acc: Record<number, GameWithPlayers[]>, game: GameWithPlayers) => {
+			const count = game.players.length;
+			if (!acc[count]) acc[count] = [];
+			acc[count].push(game);
+			return acc;
+		},
+		{}
+	);
+
+	// Calcola le statistiche per ogni gruppo
+	return Object.entries(gamesByPlayerCount)
+		.map(([count, games]) => {
+			// Calcola le statistiche dei villain per questo numero di giocatori
+			const villainStats = (games as GameWithPlayers[]).reduce(
+				(acc: Record<string, { wins: number; total: number }>, game) => {
+					game.players.forEach((player) => {
+						if (player.villainId) {
+							if (!acc[player.villainId]) {
+								acc[player.villainId] = { wins: 0, total: 0 };
+							}
+							acc[player.villainId].total++;
+							if (player.isWinner) {
+								acc[player.villainId].wins++;
+							}
+						}
+					});
+					return acc;
+				},
+				{}
+			);
+
+			// Converti in array e calcola le percentuali
+			const stats = Object.entries(villainStats)
+				.map(([id, stats]) => ({
+					id,
+					wins: stats.wins,
+					total: stats.total,
+					winRate: ((stats.wins / stats.total) * 100).toFixed(1),
+				}))
+				.sort((a, b) => Number(b.winRate) - Number(a.winRate))
+				.slice(0, 5);
+
+			return {
+				count: Number(count),
+				stats,
+			};
+		})
+		.sort((a, b) => a.count - b.count);
 };
 
 export default function VillainsByPlayerCount() {
-	const { data: statsByPlayerCount, error } = useSWR<VillainStatsByPlayerCount>(
+	const { data: statsByPlayerCount, error } = useSWR(
 		'villains-by-player-count-top',
 		fetcher,
 		{

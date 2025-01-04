@@ -16,6 +16,7 @@ import {
 	TooltipProvider,
 	TooltipTrigger,
 } from '@/components/ui/tooltip';
+import { villains } from '@/data/data';
 import { GameWithPlayers } from '@/lib/types';
 import { Calendar, FilterX, Search, Users } from 'lucide-react';
 import { useState } from 'react';
@@ -45,11 +46,11 @@ export function GamesFilter({ games, onFilter }: GamesFilterProps) {
 		}
 
 		if (dateFrom) {
-			filtered = filtered.filter((g) => g.date >= new Date(dateFrom));
+			filtered = filtered.filter((g) => new Date(g.date) >= new Date(dateFrom));
 		}
 
 		if (dateTo) {
-			filtered = filtered.filter((g) => g.date <= new Date(dateTo));
+			filtered = filtered.filter((g) => new Date(g.date) <= new Date(dateTo));
 		}
 
 		if (searchTerm) {
@@ -59,7 +60,12 @@ export function GamesFilter({ games, onFilter }: GamesFilterProps) {
 					// Cerca nel createdBy
 					g.createdBy?.toLowerCase().includes(search) ||
 					// Cerca nei villain
-					g.players.some((p) => p.villainId.toLowerCase().includes(search))
+					g.players.some((p) => {
+						const villain = villains.find(
+							(v) => v.idGoogle === p.villainId || v.id === p.villainId
+						);
+						return villain?.name.toLowerCase().includes(search);
+					})
 			);
 		}
 

@@ -1,7 +1,7 @@
 'use client';
 
 import { VillainLink } from '@/components/VillainLink';
-import { GameResult } from '@/lib/types';
+import { GameWithPlayers } from '@/lib/types';
 import { ArrowRight } from 'lucide-react';
 import Link from 'next/link';
 import useSWR from 'swr';
@@ -21,14 +21,12 @@ const fetcher = async () => {
 
 	// Calcola le statistiche dei villain
 	const villainStats = data.reduce(
-		(acc: Record<string, number>, game: GameResult) => {
-			game.players.forEach(
-				(player: { villainId: string; isWinner: boolean }) => {
-					if (player.villainId) {
-						acc[player.villainId] = (acc[player.villainId] || 0) + 1;
-					}
+		(acc: Record<string, number>, game: GameWithPlayers) => {
+			game.players.forEach((player) => {
+				if (player.villainId) {
+					acc[player.villainId] = (acc[player.villainId] || 0) + 1;
 				}
-			);
+			});
 			return acc;
 		},
 		{}
@@ -38,10 +36,10 @@ const fetcher = async () => {
 	const values: number[] = Object.values(villainStats);
 	const totalGames = values.reduce((a, b) => a + b, 0);
 	const statsArray = Object.entries(villainStats as Record<string, number>).map(
-		([id, count]) => ({
+		([id, count]: [string, number]) => ({
 			id,
 			count,
-			percentage: Math.round((count / totalGames) * 100),
+			percentage: ((count / totalGames) * 100).toFixed(1),
 		})
 	);
 

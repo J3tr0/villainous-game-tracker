@@ -10,26 +10,51 @@ import {
 	TableHeader,
 	TableRow,
 } from '@/components/ui/table';
-import { VillainUsageStats } from '@/lib/types';
-import { getVillainImage } from '@/lib/villainUtils';
+import { villains } from '@/data/data';
+import { GameWithPlayers } from '@/lib/types';
+import { getVillainID, getVillainImage } from '@/lib/villainUtils';
 import Link from 'next/link';
 import useSWR from 'swr';
 
 const fetcher = async () => {
-	const res = await fetch('/api/villains/most-used');
+	const res = await fetch('/api/games/sheet');
 	const data = await res.json();
 	if (data.error) throw new Error(data.error);
-	return data;
+
+	const villainStats = data.reduce(
+		(acc: Record<string, number>, game: GameWithPlayers) => {
+			game.players.forEach((player) => {
+				if (player.villainId) {
+					acc[player.villainId] = (acc[player.villainId] || 0) + 1;
+				}
+			});
+			return acc;
+		},
+		{}
+	);
+
+	const values: number[] = Object.values(villainStats);
+	const totalGames = values.reduce((a, b) => a + b, 0);
+
+	const statsArray = Object.entries(villainStats as Record<string, number>).map(
+		([id, count]) => {
+			const villain = villains.find((v) => v.id === id || v.idGoogle === id);
+			return {
+				id,
+				name: villain?.name || id,
+				count,
+				percentage: ((count / totalGames) * 100).toFixed(1),
+			};
+		}
+	);
+
+	return statsArray.sort((a, b) => b.count - a.count);
 };
 
 export default function MostUsedVillainsPage() {
-	const { data: villains, error } = useSWR<VillainUsageStats[]>(
-		'most-used-villains',
-		fetcher,
-		{
-			refreshInterval: 5000,
-		}
-	);
+	const { data: villains, error } = useSWR('most-used-villains', fetcher, {
+		refreshInterval: 5000,
+	});
 
 	if (error)
 		return (
@@ -65,10 +90,12 @@ export default function MostUsedVillainsPage() {
 								<TableCell>#{index + 1}</TableCell>
 								<TableCell>
 									<Link
-										href={`/stats/villains/${villain.id}`}
+										href={`/stats/villains/${getVillainID(villain.id)}`}
 										className="flex items-center gap-2 hover:text-primary transition-colors">
 										<Avatar className="size-8 rounded-sm">
-											<AvatarImage src={getVillainImage(villain.id)} />
+											<AvatarImage
+												src={getVillainImage(getVillainID(villain.id))}
+											/>
 										</Avatar>
 										{villain.name}
 									</Link>

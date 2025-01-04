@@ -7,8 +7,6 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import { ModeToggle } from './ModeToggler';
-import { NewGameDialog } from './NewGameDialog';
 
 export default function Header() {
 	const { theme } = useTheme();
@@ -72,8 +70,8 @@ export default function Header() {
 						</Link>
 					</Button>
 				)}
-				<NewGameDialog />
-				<ModeToggle />
+				{/* <NewGameDialog />
+				<ModeToggle /> */}
 			</span>
 		</header>
 	);

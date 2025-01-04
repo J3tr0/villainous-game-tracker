@@ -50,7 +50,7 @@ export function RecentGames() {
 
 	const sortedGames = [...games]
 		.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
-		.slice(0, 5);
+		.slice(0, 10);
 
 	return (
 		<section className="mt-8">

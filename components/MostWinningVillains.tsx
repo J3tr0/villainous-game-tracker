@@ -1,7 +1,7 @@
 'use client';
 
 import { VillainLink } from '@/components/VillainLink';
-import { VillainStats } from '@/lib/types';
+import { GameWithPlayers } from '@/lib/types';
 import { ArrowRight } from 'lucide-react';
 import Link from 'next/link';
 import useSWR from 'swr';
@@ -15,22 +15,56 @@ import {
 } from './ui/table';
 
 const fetcher = async () => {
-	const res = await fetch('/api/villains/most-winning/top');
+	const res = await fetch('/api/games/sheet');
 	const data = await res.json();
 	if (data.error) throw new Error(data.error);
-	return data;
+
+	// Calcola le statistiche delle vittorie dei villain
+	const villainStats = data.reduce(
+		(
+			acc: Record<string, { wins: number; total: number }>,
+			game: GameWithPlayers
+		) => {
+			game.players.forEach((player) => {
+				if (player.villainId) {
+					if (!acc[player.villainId]) {
+						acc[player.villainId] = { wins: 0, total: 0 };
+					}
+					acc[player.villainId].total++;
+					if (player.isWinner) {
+						acc[player.villainId].wins++;
+					}
+				}
+			});
+			return acc;
+		},
+		{}
+	);
+
+	// Converti in array e calcola le percentuali
+	const statsArray = Object.entries(
+		villainStats as Record<string, { wins: number; total: number }>
+	).map(([id, stats]) => ({
+		id,
+		wins: stats.wins,
+		total: stats.total,
+		winRate: ((stats.wins / stats.total) * 100).toFixed(1),
+	}));
+
+	// Ordina per percentuale vittorie decrescente
+	return statsArray.sort((a, b) => Number(b.winRate) - Number(a.winRate));
 };
 
 export default function MostWinningVillains() {
-	const { data: villainStats, error } = useSWR<VillainStats[]>(
-		'most-winning-villains-top',
+	const { data: villainStats, error } = useSWR(
+		'most-winning-villains',
 		fetcher,
 		{
 			refreshInterval: 5000,
 		}
 	);
 
-	if (error)
+	if (error) {
 		return (
 			<section>
 				<h2 className="text-2xl font-bold mb-4 uppercase">
@@ -41,8 +75,9 @@ export default function MostWinningVillains() {
 				<p className="text-muted-foreground">Errore nel caricamento dei dati</p>
 			</section>
 		);
+	}
 
-	if (!villainStats)
+	if (!villainStats) {
 		return (
 			<section>
 				<h2 className="text-2xl font-bold mb-4 uppercase">
@@ -51,18 +86,6 @@ export default function MostWinningVillains() {
 					</span>
 				</h2>
 				<p className="text-muted-foreground">Caricamento...</p>
-			</section>
-		);
-
-	if (!villainStats.length) {
-		return (
-			<section>
-				<h2 className="text-2xl font-bold mb-4 uppercase">
-					<span className="bg-clip-text text-transparent bg-gradient-to-tl from-pink-500 to-indigo-800">
-						Top 5 villain più vincenti
-					</span>
-				</h2>
-				<p className="text-muted-foreground">Nessuna partita disponibile</p>
 			</section>
 		);
 	}
@@ -84,7 +107,7 @@ export default function MostWinningVillains() {
 					</TableRow>
 				</TableHeader>
 				<TableBody>
-					{villainStats.map((villain) => (
+					{villainStats.slice(0, 5).map((villain) => (
 						<TableRow
 							key={villain.id}
 							className="hover:bg-gradient-to-tl hover:from-pink-500/25 hover:to-indigo-800/25">

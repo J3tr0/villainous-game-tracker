@@ -1,6 +1,7 @@
 'use client';
 
 import { Badge } from '@/components/ui/badge';
+import { GameWithPlayers } from '@/lib/types';
 import useSWR from 'swr';
 import {
 	Table,
@@ -11,28 +12,41 @@ import {
 	TableRow,
 } from './ui/table';
 
-type GameStats = {
-	players: number;
-	count: number;
-	percentage: string;
-	totalGames: number;
-};
-
 const fetcher = async () => {
-	const res = await fetch('/api/games/most-played');
+	const res = await fetch('/api/games/sheet');
 	const data = await res.json();
 	if (data.error) throw new Error(data.error);
-	return data;
+
+	// Raggruppa le partite per numero di giocatori
+	const gamesByPlayerCount = data.reduce(
+		(acc: Record<number, number>, game: GameWithPlayers) => {
+			const count = game.players.length;
+			acc[count] = (acc[count] || 0) + 1;
+			return acc;
+		},
+		{}
+	);
+
+	const totalGames = Object.values(gamesByPlayerCount as Record<string, number>).reduce(
+		(a, b) => a + b,
+		0
+	);
+
+	// Converti in array e calcola le percentuali
+	return Object.entries(gamesByPlayerCount as Record<string, number>)
+		.map(([players, count]) => ({
+			players: Number(players),
+			count,
+			percentage: ((count / totalGames) * 100).toFixed(1),
+			totalGames,
+		}))
+		.sort((a, b) => b.count - a.count);
 };
 
 export default function MostPlayedGames() {
-	const { data: stats, error } = useSWR<GameStats[]>(
-		'most-played-games',
-		fetcher,
-		{
-			refreshInterval: 5000,
-		}
-	);
+	const { data: stats, error } = useSWR('most-played-games', fetcher, {
+		refreshInterval: 5000,
+	});
 
 	if (error) {
 		return (
@@ -56,19 +70,6 @@ export default function MostPlayedGames() {
 					</span>
 				</h2>
 				<p className="text-muted-foreground">Caricamento...</p>
-			</section>
-		);
-	}
-
-	if (!stats.length) {
-		return (
-			<section>
-				<h2 className="text-2xl font-bold uppercase mb-4">
-					<span className="bg-clip-text text-transparent bg-gradient-to-tl from-pink-500 to-indigo-800">
-						Statistiche partite
-					</span>
-				</h2>
-				<p className="text-muted-foreground">Nessuna partita disponibile</p>
 			</section>
 		);
 	}

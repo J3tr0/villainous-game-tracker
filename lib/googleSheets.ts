@@ -33,20 +33,36 @@ export async function getGamesFromSheet(): Promise<GameResult[]> {
 			return [];
 		}
 
-		return response.data.values.map((row) => ({
-			id: crypto.randomUUID(),
-			date: new Date(row[8]),
-			numberOfPlayers: parseInt(row[0]),
-			createdBy: row[9] || null,
-			players: [
-				{ villainId: row[2], isWinner: row[1] === row[2] },
-				{ villainId: row[3], isWinner: row[1] === row[3] },
-				{ villainId: row[4], isWinner: row[1] === row[4] },
-				{ villainId: row[5], isWinner: row[1] === row[5] },
-				{ villainId: row[6], isWinner: row[1] === row[6] },
-				{ villainId: row[7], isWinner: row[1] === row[7] },
-			].filter((p) => p.villainId),
-		}));
+		return [...response.data.values].reverse().map((row) => {
+			// console.log('Data dalla sheet:', row[8]);
+
+			let date = new Date();
+
+			if (row[8]) {
+				const [day, month, year] = row[8].split('/');
+				const fullYear = year.length === 2 ? '20' + year : year;
+				date = new Date(`${fullYear}-${month}-${day}`);
+
+				if (isNaN(date.getTime())) {
+					date = new Date();
+				}
+			}
+
+			return {
+				id: crypto.randomUUID(),
+				date,
+				numberOfPlayers: parseInt(row[0]),
+				createdBy: row[9] || null,
+				players: [
+					{ villainId: row[2], isWinner: row[1] === row[2] },
+					{ villainId: row[3], isWinner: row[1] === row[3] },
+					{ villainId: row[4], isWinner: row[1] === row[4] },
+					{ villainId: row[5], isWinner: row[1] === row[5] },
+					{ villainId: row[6], isWinner: row[1] === row[6] },
+					{ villainId: row[7], isWinner: row[1] === row[7] },
+				].filter((p) => p.villainId),
+			};
+		});
 	} catch (error) {
 		console.error('Error fetching from sheet:', error);
 		return [];
