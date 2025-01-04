@@ -12,6 +12,7 @@ import {
 	TableRow,
 } from './ui/table';
 
+// Fetch the games from the sheet
 const fetcher = async () => {
 	const res = await fetch('/api/games/sheet');
 	const data = await res.json();
