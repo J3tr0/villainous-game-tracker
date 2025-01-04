@@ -1,7 +1,19 @@
-import type { NextConfig } from "next";
+import type { NextConfig } from 'next';
 
 const nextConfig: NextConfig = {
-  /* config options here */
+	webpack: (config, { isServer }) => {
+		if (!isServer) {
+			config.resolve = {
+				...config.resolve,
+				fallback: {
+					...config.resolve?.fallback,
+					crypto: false,
+				},
+			};
+		}
+		return config;
+	},
+	serverExternalPackages: ['@google-cloud/local-auth'],
 };
 
 export default nextConfig;
