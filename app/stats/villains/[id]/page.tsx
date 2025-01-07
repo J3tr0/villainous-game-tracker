@@ -1,3 +1,5 @@
+'use client';
+
 import { Avatar, AvatarImage } from '@/components/ui/avatar';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
@@ -9,48 +11,59 @@ import {
 	TableRow,
 } from '@/components/ui/table';
 import { villains } from '@/data/data';
-import { prisma } from '@/lib/db';
+import { GameWithPlayers } from '@/lib/types';
 import { format } from 'date-fns';
 import { it } from 'date-fns/locale';
 import { notFound } from 'next/navigation';
+import useSWR from 'swr';
 
 interface Props {
-	params: Promise<{ id: string }>;
+	params: { id: string };
 }
 
-export default async function VillainStatsPage({ params }: Props) {
-	const { id } = await params;
+const fetcher = async () => {
+	const res = await fetch('/api/games/sheet');
+	const data = await res.json();
+	if (data.error) throw new Error(data.error);
+	return data;
+};
+
+export default function VillainStatsPage({ params }: Props) {
+	const { id } = params;
+	const { data: games, error } = useSWR<GameWithPlayers[]>('games', fetcher, {
+		refreshInterval: 30000,
+	});
 
 	const villain = villains.find((v) => v.id === id);
 	if (!villain) {
 		notFound();
 	}
 
-	const gamesData = await prisma.player.findMany({
-		where: {
-			villainId: id,
-		},
-		select: {
-			isWinner: true,
-			game: {
-				select: {
-					date: true,
-					numberOfPlayers: true,
-					players: {
-						select: {
-							villainId: true,
-							isWinner: true,
-						},
-					},
+	if (error) {
+		return (
+			<div className="text-muted-foreground">
+				Errore nel caricamento dei dati
+			</div>
+		);
+	}
+
+	if (!games) {
+		return <div className="text-muted-foreground">Caricamento...</div>;
+	}
+
+	// Filtra i giochi per questo villain
+	const gamesData = games.flatMap((game) =>
+		game.players
+			.filter((player) => player.villainId === id)
+			.map((player) => ({
+				isWinner: player.isWinner,
+				game: {
+					date: game.date,
+					numberOfPlayers: game.players.length,
+					players: game.players,
 				},
-			},
-		},
-		orderBy: {
-			game: {
-				date: 'desc',
-			},
-		},
-	});
+			}))
+	);
 
 	// Calcolo statistiche base
 	const totalGames = gamesData.length;
@@ -108,7 +121,7 @@ export default async function VillainStatsPage({ params }: Props) {
 							<CardTitle>% Vittorie</CardTitle>
 						</CardHeader>
 						<CardContent className="text-2xl font-bold">
-							{((wins / totalGames) * 100).toFixed(1)}%
+							{totalGames > 0 ? ((wins / totalGames) * 100).toFixed(1) : '0.0'}%
 						</CardContent>
 					</Card>
 
@@ -118,7 +131,7 @@ export default async function VillainStatsPage({ params }: Props) {
 						</CardHeader>
 						<CardContent className="text-2xl font-bold">
 							{lastGame
-								? format(lastGame.date, 'dd MMM yyyy', { locale: it })
+								? format(new Date(lastGame.date), 'dd MMM yyyy', { locale: it })
 								: 'N/A'}
 						</CardContent>
 					</Card>
