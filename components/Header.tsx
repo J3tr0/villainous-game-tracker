@@ -1,12 +1,13 @@
 'use client';
 
 import { Button } from '@/components/ui/button';
-import { Home } from 'lucide-react';
+import { Facebook, Home, Instagram } from 'lucide-react';
 import { useTheme } from 'next-themes';
 import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
+import { Avatar, AvatarImage } from './ui/avatar';
 
 export default function Header() {
 	const { theme } = useTheme();
@@ -71,6 +72,32 @@ export default function Header() {
 					</Button>
 				)}
 			</span>
+			<div className="space-y-2">
+				<div className="flex justify-center items-center gap-4 text-sm">
+					<p className="flex items-center gap-2">
+						Segui{' '}
+						<Avatar className="h-6 w-6">
+							<AvatarImage src="/Villainous_Italia_logo.png" />
+						</Avatar>{' '}
+						Villainous Italia su:
+					</p>
+					<a
+						href="https://www.facebook.com/villainousitalia"
+						target="_blank"
+						rel="noopener noreferrer"
+						className="flex items-center gap-1 text-primary hover:underline">
+						<Facebook size={16} />
+					</a>
+
+					<a
+						href="https://www.instagram.com/villainousitalia/"
+						target="_blank"
+						rel="noopener noreferrer"
+						className="flex items-center gap-1 text-primary hover:underline">
+						<Instagram size={16} />
+					</a>
+				</div>
+			</div>
 		</header>
 	);
 }

@@ -114,12 +114,6 @@ export async function getVillainStatsByPlayerCount(
 		game.players.some((player) => player.villainId === villainId)
 	);
 
-	console.log(`🎮 Statistiche per ${villainId}:`, {
-		totalePartite: games.length,
-		partiteVillain: villainGames.length,
-		esempio: villainGames[0]
-	});
-
 	const playerCounts = Array.from(
 		new Set(villainGames.map((g) => g.numberOfPlayers))
 	).sort((a, b) => a - b);

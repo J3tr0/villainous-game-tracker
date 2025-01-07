@@ -10,7 +10,7 @@ export function formatDate(dateString: string) {
 			return dateString;
 		}
 
-		console.log('Date object:', date);
+		// console.log('Date object:', date);
 
 		// Formatta la data in italiano
 		return date.toLocaleDateString('it-IT', {

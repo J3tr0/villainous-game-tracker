@@ -39,7 +39,6 @@ export default function VillainStatsPage({ params }: { params: Params }) {
 	}
 
 	if (error) {
-		console.error('Errore SWR:', error);
 		return (
 			<div className="text-muted-foreground">
 				Errore nel caricamento dei dati
@@ -51,7 +50,6 @@ export default function VillainStatsPage({ params }: { params: Params }) {
 		return <div className="text-muted-foreground">Caricamento...</div>;
 	}
 
-	// Filtra i giochi per questo villain (usando sia ID che nome)
 	const gamesData = games.flatMap((game) =>
 		game.players
 			.filter(
@@ -66,13 +64,6 @@ export default function VillainStatsPage({ params }: { params: Params }) {
 				},
 			}))
 	);
-
-	console.log('🎮 Statistiche villain:', {
-		villain: villain.name,
-		totalePartite: games.length,
-		partiteVillain: gamesData.length,
-		esempio: gamesData[0],
-	});
 
 	// Calcolo statistiche base
 	const totalGames = gamesData.length;
