@@ -1,6 +1,5 @@
 import { villains } from '@/data/data';
-import { prisma } from '@/lib/db';
-import { VillainStats } from '@/lib/types';
+import { GameWithPlayers, VillainStats } from '@/lib/types';
 
 export function getVillainID(name: string): string {
 	return villains.find((v) => v.name === name)?.id ?? name;
@@ -17,18 +16,23 @@ export function getVillainImage(id: string): string {
 export async function getVillainStats(
 	villainId: string
 ): Promise<VillainStats> {
-	const games = await prisma.player.findMany({
-		where: { villainId },
-		include: { game: true },
-	});
+	const res = await fetch('/api/games/sheet');
+	const games = (await res.json()) as GameWithPlayers[];
 
-	const total = games.length;
-	const wins = games.filter((game) => game.isWinner).length;
-	const winRate = ((wins / total) * 100).toFixed(1) + '%';
+	const villainGames = games.filter((game: GameWithPlayers) =>
+		game.players.some((player) => player.villainId === villainId)
+	);
+
+	const total = villainGames.length;
+	const wins = villainGames.filter(
+		(game) => game.players.find((p) => p.villainId === villainId)?.isWinner
+	).length;
+
 	const lastPlayed =
-		games.length > 0
-			? games.sort((a, b) => b.game.date.getTime() - a.game.date.getTime())[0]
-					.game.date
+		villainGames.length > 0
+			? new Date(
+					Math.max(...villainGames.map((g) => new Date(g.date).getTime()))
+			  )
 			: new Date();
 
 	return {
@@ -37,83 +41,97 @@ export async function getVillainStats(
 		total,
 		wins,
 		lastPlayed,
-		winRate,
+		winRate: ((wins / total) * 100).toFixed(1) + '%',
 	};
 }
 
 export async function getMostUsedVillains(): Promise<VillainStats[]> {
-	const totalGames = await prisma.game.count();
-	const villainCounts = await prisma.player.groupBy({
-		by: ['villainId'],
-		_count: { villainId: true },
-		orderBy: { _count: { villainId: 'desc' } },
-	});
+	const res = await fetch('/api/games/sheet');
+	const games = (await res.json()) as GameWithPlayers[];
 
-	return villainCounts.map((v) => ({
-		id: v.villainId,
-		name: getVillainName(v.villainId),
-		total: v._count.villainId,
-		wins: 0,
-		winRate: ((v._count.villainId / totalGames) * 100).toFixed(1) + '%',
-		lastPlayed: new Date(),
-	}));
+	const villainCounts = games
+		.flatMap((game: GameWithPlayers) => game.players)
+		.reduce((acc, player) => {
+			acc[player.villainId] = (acc[player.villainId] || 0) + 1;
+			return acc;
+		}, {} as Record<string, number>);
+
+	return Object.entries(villainCounts)
+		.map(([id, count]) => ({
+			id,
+			name: getVillainName(id),
+			total: count,
+			wins: 0,
+			winRate: ((count / games.length) * 100).toFixed(1) + '%',
+			lastPlayed: new Date(),
+		}))
+		.sort((a, b) => b.total - a.total);
 }
 
 export async function getMostWinningVillains(): Promise<VillainStats[]> {
-	const [totalGames, winningGames] = await Promise.all([
-		prisma.player.groupBy({ by: ['villainId'], _count: true }),
-		prisma.player.groupBy({
-			by: ['villainId'],
-			where: { isWinner: true },
-			_count: true,
-		}),
-	]);
+	const res = await fetch('/api/games/sheet');
+	const games = (await res.json()) as GameWithPlayers[];
 
-	return totalGames
-		.map((v) => {
-			const wins =
-				winningGames.find((w) => w.villainId === v.villainId)?._count ?? 0;
-			return {
-				id: v.villainId,
-				name: getVillainName(v.villainId),
-				total: v._count,
-				wins,
-				winRate: ((wins / v._count) * 100).toFixed(1) + '%',
-				lastPlayed: new Date(),
-			};
-		})
+	const villainStats = games
+		.flatMap((game: GameWithPlayers) => game.players)
+		.reduce((acc, player) => {
+			if (!acc[player.villainId]) {
+				acc[player.villainId] = { total: 0, wins: 0 };
+			}
+			acc[player.villainId].total++;
+			if (player.isWinner) acc[player.villainId].wins++;
+			return acc;
+		}, {} as Record<string, { total: number; wins: number }>);
+
+	return Object.entries(villainStats)
+		.map(([id, stats]) => ({
+			id,
+			name: getVillainName(id),
+			total: stats.total,
+			wins: stats.wins,
+			winRate: ((stats.wins / stats.total) * 100).toFixed(1) + '%',
+			lastPlayed: new Date(),
+		}))
 		.sort((a, b) => b.wins - a.wins);
 }
 
 export async function getPlayerCounts(): Promise<number[]> {
-	const counts = await prisma.game.groupBy({
-		by: ['numberOfPlayers'],
-		orderBy: { numberOfPlayers: 'asc' },
-	});
-	return counts.map((p) => p.numberOfPlayers);
+	const res = await fetch('/api/games/sheet');
+	const games = (await res.json()) as GameWithPlayers[];
+
+	return Array.from(
+		new Set(games.map((g: GameWithPlayers) => g.numberOfPlayers))
+	).sort((a, b) => a - b);
 }
 
 export async function getVillainStatsByPlayerCount(
 	villainId: string
 ): Promise<[number, number, number][]> {
-	const [stats, wins] = await Promise.all([
-		prisma.game.groupBy({
-			by: ['numberOfPlayers'],
-			where: { players: { some: { villainId } } },
-			_count: { _all: true },
-			orderBy: { numberOfPlayers: 'asc' },
-		}),
-		prisma.game.groupBy({
-			by: ['numberOfPlayers'],
-			where: { players: { some: { villainId, isWinner: true } } },
-			_count: { _all: true },
-		}),
-	]);
+	const res = await fetch('/api/games/sheet');
+	const games = (await res.json()) as GameWithPlayers[];
 
-	return stats.map((stat) => [
-		stat.numberOfPlayers,
-		stat._count._all,
-		wins.find((w) => w.numberOfPlayers === stat.numberOfPlayers)?._count._all ??
-			0,
-	]);
+	const villainGames = games.filter((game: GameWithPlayers) =>
+		game.players.some((player) => player.villainId === villainId)
+	);
+
+	console.log(`🎮 Statistiche per ${villainId}:`, {
+		totalePartite: games.length,
+		partiteVillain: villainGames.length,
+		esempio: villainGames[0]
+	});
+
+	const playerCounts = Array.from(
+		new Set(villainGames.map((g) => g.numberOfPlayers))
+	).sort((a, b) => a - b);
+
+	return playerCounts.map((count) => {
+		const gamesWithCount = villainGames.filter(
+			(g) => g.numberOfPlayers === count
+		);
+		const wins = gamesWithCount.filter(
+			(g) => g.players.find((p) => p.villainId === villainId)?.isWinner
+		).length;
+
+		return [count, gamesWithCount.length, wins];
+	});
 }

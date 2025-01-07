@@ -3,6 +3,7 @@ import { GameResult } from './types';
 
 const SCOPES = ['https://www.googleapis.com/auth/spreadsheets.readonly'];
 const SHEET_ID = '1mKCxWAJWHdQzi0tTH_2grxrdZRl5A49HPxM-3O2bpRg';
+const DEBUG = process.env.NODE_ENV === 'development';
 
 async function getAuthClient() {
 	if (!process.env.GOOGLE_CLIENT_EMAIL || !process.env.GOOGLE_PRIVATE_KEY) {
@@ -33,24 +34,34 @@ export async function getGamesFromSheet(): Promise<GameResult[]> {
 			return [];
 		}
 
-		return [...response.data.values].reverse().map((row) => {
-			// console.log('Data dalla sheet:', row[8]);
-
-			let date = new Date();
+		const games = [...response.data.values].reverse().map((row) => {
+			let date: Date;
 
 			if (row[8]) {
 				const [day, month, year] = row[8].split('/');
+				const monthIndex = parseInt(month) - 1;
 				const fullYear = year.length === 2 ? '20' + year : year;
-				date = new Date(`${fullYear}-${month}-${day}`);
 
-				if (isNaN(date.getTime())) {
-					date = new Date();
+				date = new Date(
+					Date.UTC(parseInt(fullYear), monthIndex, parseInt(day))
+				);
+
+				if (isNaN(date.getTime()) && DEBUG) {
+					console.warn('Data non valida nel foglio:', {
+						raw: row[8],
+						day,
+						month: monthIndex + 1,
+						year: fullYear,
+					});
+					date = new Date(Date.UTC(2024, 0, 1));
 				}
+			} else {
+				date = new Date(Date.UTC(2024, 0, 1));
 			}
 
-			return {
+			const game = {
 				id: crypto.randomUUID(),
-				date,
+				date: date.toISOString(),
 				numberOfPlayers: parseInt(row[0]),
 				createdBy: row[9] || null,
 				players: [
@@ -62,9 +73,15 @@ export async function getGamesFromSheet(): Promise<GameResult[]> {
 					{ villainId: row[7], isWinner: row[1] === row[7] },
 				].filter((p) => p.villainId),
 			};
+
+			return game;
 		});
+
+		return games;
 	} catch (error) {
-		console.error('Error fetching from sheet:', error);
+		if (DEBUG) {
+			console.error('Error fetching from sheet:', error);
+		}
 		return [];
 	}
 }

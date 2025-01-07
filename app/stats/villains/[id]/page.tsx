@@ -15,14 +15,8 @@ import { GameWithPlayers } from '@/lib/types';
 import { format } from 'date-fns';
 import { it } from 'date-fns/locale';
 import { notFound } from 'next/navigation';
+import { use } from 'react';
 import useSWR from 'swr';
-
-interface Props {
-	params: {
-		id: string;
-	};
-	searchParams: { [key: string]: string | string[] | undefined };
-}
 
 const fetcher = async () => {
 	const res = await fetch('/api/games/sheet');
@@ -31,8 +25,10 @@ const fetcher = async () => {
 	return data;
 };
 
-export default function VillainStatsPage({ params }: Props) {
-	const { id } = params;
+type Params = Promise<{ id: string }>;
+
+export default function VillainStatsPage({ params }: { params: Params }) {
+	const { id } = use(params);
 	const { data: games, error } = useSWR<GameWithPlayers[]>('games', fetcher, {
 		refreshInterval: 30000,
 	});
@@ -43,6 +39,7 @@ export default function VillainStatsPage({ params }: Props) {
 	}
 
 	if (error) {
+		console.error('Errore SWR:', error);
 		return (
 			<div className="text-muted-foreground">
 				Errore nel caricamento dei dati
@@ -54,10 +51,12 @@ export default function VillainStatsPage({ params }: Props) {
 		return <div className="text-muted-foreground">Caricamento...</div>;
 	}
 
-	// Filtra i giochi per questo villain
+	// Filtra i giochi per questo villain (usando sia ID che nome)
 	const gamesData = games.flatMap((game) =>
 		game.players
-			.filter((player) => player.villainId === id)
+			.filter(
+				(player) => player.villainId === id || player.villainId === villain.name
+			)
 			.map((player) => ({
 				isWinner: player.isWinner,
 				game: {
@@ -67,6 +66,13 @@ export default function VillainStatsPage({ params }: Props) {
 				},
 			}))
 	);
+
+	console.log('🎮 Statistiche villain:', {
+		villain: villain.name,
+		totalePartite: games.length,
+		partiteVillain: gamesData.length,
+		esempio: gamesData[0],
+	});
 
 	// Calcolo statistiche base
 	const totalGames = gamesData.length;

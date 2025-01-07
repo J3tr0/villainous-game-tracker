@@ -70,8 +70,6 @@ export default function Header() {
 						</Link>
 					</Button>
 				)}
-				{/* <NewGameDialog />
-				<ModeToggle /> */}
 			</span>
 		</header>
 	);

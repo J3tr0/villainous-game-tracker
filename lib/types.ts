@@ -7,7 +7,7 @@ export type Villain = {
 
 export interface GameResult {
 	id?: string;
-	date: Date;
+	date: Date | string;
 	numberOfPlayers: number;
 	createdBy?: string;
 	players: {
