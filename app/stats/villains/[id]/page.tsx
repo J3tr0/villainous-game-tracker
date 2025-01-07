@@ -18,7 +18,10 @@ import { notFound } from 'next/navigation';
 import useSWR from 'swr';
 
 interface Props {
-	params: { id: string };
+	params: {
+		id: string;
+	};
+	searchParams: { [key: string]: string | string[] | undefined };
 }
 
 const fetcher = async () => {
